@@ -1,0 +1,40 @@
+# Root-level ignores. NOTE: the two deployable projects (crm-backend, crm-frontend)
+# are their OWN git repos with their own .gitignore files — this root file is a
+# safety net (e.g. so the real root .env with secrets is never committed if a repo
+# is ever initialised here).
+
+# ─── Secrets ────────────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ─── Python ─────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.db
+*.sqlite3
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+
+# ─── Node / frontend ────────────────────────────────────────────────────────
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+*.log
+
+# ─── Editor / OS ────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Scratch ────────────────────────────────────────────────────────────────
+_*.py
