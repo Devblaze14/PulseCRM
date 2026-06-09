@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 # PulseCRM — an AI-native marketing assistant for D2C brands
 
 A **chat-first marketing CRM**. A marketer types intent in plain English —
@@ -211,6 +211,3 @@ crm-backend/                  → Render (two services from one repo)
 Each service has its own `requirements.txt` / `package.json`, `.env.example`, and
 its own start command. See each folder for details; `crm-backend/channel/README.md`
 covers the scale story for the messaging layer.
-=======
-# PulseCRM
->>>>>>> bb417d1f0c72b12cd7f6bbf072ee9701d6b59f02
