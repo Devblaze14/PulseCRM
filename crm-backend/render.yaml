@@ -1,0 +1,39 @@
+# Render blueprint: two services from this one repo.
+# Each has its own root dir, build, and start command. Secrets are set in the
+# Render dashboard (sync:false), not committed here.
+#
+# After deploy, wire the cross-service URLs:
+#   api.CHANNEL_SERVICE_URL = the channel service's URL
+#   api.CRM_BASE_URL        = the api service's own URL (for callback_url)
+#   channel.CALLBACK_SECRET = same value as api.CALLBACK_SECRET
+
+services:
+  - type: web
+    name: pulsecrm-api
+    runtime: python
+    rootDir: api
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GROQ_MODEL
+        value: llama-3.3-70b-versatile
+      - key: CHANNEL_SERVICE_URL
+        sync: false
+      - key: CRM_BASE_URL
+        sync: false
+      - key: CALLBACK_SECRET
+        sync: false
+
+  - type: web
+    name: pulsecrm-channel
+    runtime: python
+    rootDir: channel
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: CALLBACK_SECRET
+        sync: false

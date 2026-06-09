@@ -1,0 +1,43 @@
+# ─── Secrets ────────────────────────────────────────────────────────────────
+# Vite loads .env*; only .env.example is committed.
+.env
+.env.*
+!.env.example
+*.local
+
+# ─── Dependencies ───────────────────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ─── Build output ───────────────────────────────────────────────────────────
+dist/
+dist-ssr/
+build/
+
+# ─── TypeScript / Vite build artifacts ──────────────────────────────────────
+*.tsbuildinfo
+vite.config.d.ts
+vite.config.js
+vite.config.ts.timestamp-*
+
+# ─── Logs ───────────────────────────────────────────────────────────────────
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ─── Editor / OS ────────────────────────────────────────────────────────────
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,20 @@
+# --- Web framework ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+
+# --- ORM / DB ---
+sqlmodel==0.0.22
+# Postgres driver for Supabase (psycopg 3). SQLite needs no extra driver.
+psycopg[binary]==3.2.3
+
+# --- Config ---
+pydantic-settings==2.7.0
+
+# --- LLM (Groq) — used from Milestone 3 onward ---
+groq==0.13.1
+
+# --- Outbound HTTP to the channel service ---
+httpx==0.28.1
+
+# --- Seed data ---
+faker==33.1.0

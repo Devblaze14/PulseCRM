@@ -1,0 +1,65 @@
+# ─── Secrets ────────────────────────────────────────────────────────────────
+# Never commit real env files; .env.example IS committed (negated below).
+.env
+.env.*
+!.env.example
+api/.env
+channel/.env
+
+# ─── Python ─────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.virtualenv/
+
+# Local SQLite dev databases (fallback when no DATABASE_URL is set)
+*.db
+*.sqlite
+*.sqlite3
+
+# ─── Tooling / caches ───────────────────────────────────────────────────────
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# ─── Editor / OS ────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Scratch ────────────────────────────────────────────────────────────────
+# Throwaway test/probe scripts (we used a few during development).
+_*.py
+*.log

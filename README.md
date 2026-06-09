@@ -1,97 +1,134 @@
+# PulseCRM — an AI marketing assistant for online brands
 
-# PulseCRM — an AI-native marketing assistant for D2C brands
+> **In one sentence:** a marketer types what they want in plain English — *"win
+> back customers who haven't ordered in 30 days, give them 15% off"* — and
+> PulseCRM figures out **who** to message, **writes** the message, sends it, and
+> shows **how it performed** — all from a chat box.
 
-A **chat-first marketing CRM**. A marketer types intent in plain English —
-_"win back customers who haven't ordered in 30 days, offer 15% off"_ — and the
-assistant:
-
-1. translates it into a **structured audience segment** (via an LLM, never raw SQL),
-2. shows a **live audience preview** (count + sample customers),
-3. **drafts a channel-appropriate message** with a `{name}` placeholder,
-4. lets the marketer **review, edit, and confirm**, then **launches** the campaign,
-5. and a **dashboard** shows how the campaign performed as delivery events stream back.
-
-AI is woven into the two places it adds the most leverage — **segmenting** and
-**drafting** — not bolted on. A human always confirms before anything "sends".
-
-> This is a marketing/engagement CRM for **reaching shoppers**. It is deliberately
-> **not** a sales/support CRM — there are no deals, pipelines, leads, tickets, or
-> kanban boards.
+It's like having a smart assistant for marketing campaigns. You describe the
+goal; the AI does the fiddly parts (finding the right customers, drafting the
+copy); **you stay in control and click "Launch" before anything is sent.**
 
 ---
 
-## Architecture
+## 🎬 What it actually does (a 30-second story)
 
-Three independently-deployable pieces:
+1. You open the **Campaign Builder** and type:
+   *"customers in Mumbai who spent over ₹5000."*
+2. The AI instantly shows: **"312 customers match"** with a sample list — so you
+   can sanity-check the audience before committing.
+3. It also **drafts a ready-to-send message** like
+   *"Hi {name}, here's 15% off just for you 🛍️"* — which you can edit.
+4. You pick a channel (WhatsApp / SMS / Email), hit **🚀 Launch**, and the
+   campaign sends.
+5. The **campaign page fills up live** — delivered → opened → clicked →
+   converted — with a one-line AI summary like *"Strong 28% click rate; next,
+   improve the landing page to lift conversions."*
+
+No spreadsheets, no SQL, no guesswork.
+
+---
+
+## 🧩 How it's built (the big picture)
+
+PulseCRM is made of **three separate programs** that talk to each other over the
+internet (HTTP). Splitting them up keeps each one simple and lets them scale and
+deploy independently.
+
+![How PulseCRM's parts talk to each other](docs/architecture.png)
+
+If the image doesn't render, here's the same idea in text:
 
 ```
-┌──────────────────┐     HTTP      ┌──────────────────────┐    HTTP/send    ┌────────────────────┐
-│  crm-frontend    │  ───────────▶ │   CRM API (api/)     │ ──────────────▶ │  Channel service   │
-│  React + Vite    │   fetch/JSON  │   FastAPI + SQLModel │                 │  (channel/)        │
-│  Tailwind/Recharts│ ◀───────────  │   Postgres (Supabase)│ ◀────────────── │  FastAPI, async    │
-└──────────────────┘               └──────────────────────┘   callbacks      └────────────────────┘
-                                         │   ▲                /api/receipts
-                                         ▼   │
-                                    ┌─────────────┐
-                                    │ Groq LLM    │  intent→segment, draft, summarize
-                                    └─────────────┘
+   You (browser)
+        │
+        ▼
+ ┌──────────────┐     "find these customers,      ┌──────────────┐
+ │   Frontend   │      send this message"          │   CRM API    │
+ │  (the UI you │ ───────────────────────────────▶ │ (the brain)  │
+ │   click on)  │ ◀─────────────────────────────── │              │
+ └──────────────┘     audience counts, stats        └──────┬───────┘
+                                                     asks AI │ │ reads/writes
+                                                            ▼ │ ▼
+                                           ┌─────────┐   ┌──────────────┐
+                                           │  Groq   │   │  Supabase    │
+                                           │  (LLM)  │   │  (database)  │
+                                           └─────────┘   └──────────────┘
+                                                            ▲
+                            "deliver these messages"        │ delivery updates
+                                       │                    │ (callbacks)
+                                       ▼                    │
+                                 ┌──────────────────────────┴───┐
+                                 │   Channel service             │
+                                 │  (a fake WhatsApp/SMS gateway)│
+                                 └───────────────────────────────┘
 ```
 
-| Service | Stack | Role | Deploy target |
+### The three programs
+
+| Program | What it is, in plain words | Tech | Lives on |
 |---|---|---|---|
-| **crm-frontend** | React + Vite + TS, Tailwind, Recharts | Dashboard + chat campaign builder | Vercel |
-| **CRM API** (`crm-backend/api`) | Python, FastAPI, SQLModel, Groq SDK | Segmentation, AI, campaigns, send, receipts, stats | Render (web service) |
-| **Channel** (`crm-backend/channel`) | Python, FastAPI, httpx, asyncio | A **simulated** messaging provider with its own URL | Render (web service) |
-| **Database** | Supabase Postgres | All persistence | Supabase |
+| **Frontend** | The website you click on — dashboard, chat, charts. | React, Vite, TypeScript, Tailwind, Recharts | Vercel |
+| **CRM API** | The "brain." Decides who matches, talks to the AI, saves everything, kicks off sends. | Python, FastAPI, SQLModel | Render |
+| **Channel** | A **pretend** messaging provider. It stands in for WhatsApp/SMS so we don't need a real (paid) account, but it behaves like one. | Python, FastAPI, asyncio | Render |
 
-The channel is a **genuinely separate service** with its own URL, called over
-HTTP — never an in-process function. This is the system-design centrepiece.
+Plus two services we use but don't run ourselves:
 
----
+- **Groq** — the AI model that turns English into structured data and writes copy.
+- **Supabase** — a hosted Postgres database where all the data lives.
 
-## The send → callback loop (the core flow)
-
-```
-1. POST /api/campaigns/{id}/send
-   ├─ resolve the campaign's segment filter → list of customers
-   ├─ create one Communication row per customer (status QUEUED), render {name}
-   ├─ POST the batch to {CHANNEL_SERVICE_URL}/send  (callback_url + shared secret)
-   │     └─ channel returns 202 IMMEDIATELY; CRM does NOT await delivery
-   └─ campaign status SENDING → SENT, return at once
-
-2. Channel simulates outcomes asynchronously (asyncio)
-   ├─ funnel: ~95% DELIVERED → OPENED → READ → CLICKED → small % CONVERTED; ~5% FAILED
-   ├─ each stage after a random 0.5–6s delay (asyncio.sleep)
-   ├─ each event is a separate callback with a uuid4 event_id
-   ├─ deliberately emits SOME events out of order (to stress the CRM)
-   ├─ retries on non-2xx with exponential backoff (3 attempts)
-   └─ caps in-flight callbacks with an asyncio.Semaphore
-
-3. POST /api/receipts (CRM)  — idempotent + order-safe
-   ├─ verify callback_secret
-   ├─ insert CommunicationEvent with UNIQUE event_id  → duplicate = no-op (idempotency)
-   ├─ advance Communication.status only if rank(incoming) > rank(current)  → never regress
-   └─ return 2xx fast so the channel doesn't needlessly retry
-
-4. GET /api/campaigns/{id}/stats  → cumulative funnel + rates + one-line AI insight
-```
-
-**Why these choices matter (and were verified end-to-end against real Supabase):**
-
-- **Idempotency** — the channel retries, so the same `event_id` can arrive twice.
-  A `UNIQUE` constraint on `CommunicationEvent.event_id` makes the second insert a
-  no-op. _Verified: 77 events received = 77 unique ids → zero double-counting._
-- **Out-of-order safety** — callbacks can arrive in any order. A rank-based status
-  machine only ever advances status; a late `OPENED` after `CLICKED` is logged but
-  never pulls status backward. _Verified: scrambled callbacks, status stayed monotonic._
-- **Persist-before-channel** — Communications are committed before the channel call,
-  so the audience is durable even if the channel is unreachable.
+> **Why is the Channel a whole separate service?** Because real messaging
+> providers *are* separate services you call over the network — they take a
+> while, can fail, and report back later. Modelling that honestly (instead of a
+> simple function call) is the most interesting engineering in this project.
 
 ---
 
-## The AI showpiece: intent → structured segment (no raw SQL)
+## 🔁 The most important flow: send → results
 
-The LLM **never writes SQL**. It outputs a small, fixed-schema JSON filter:
+This is the heart of the system. When you click **Launch**:
+
+**Step 1 — The CRM API prepares and sends** (`POST /api/campaigns/{id}/send`)
+- Works out the full list of customers in your segment.
+- Creates one "message record" per customer (status: `QUEUED`) and fills in their
+  name.
+- Hands the whole batch to the **Channel** service, along with a *callback
+  address* ("call me back here when you have updates") and a shared secret.
+- The Channel says **"got it" (202)** immediately — the CRM does **not** wait
+  around for delivery. The campaign is marked `SENT` and you get control back.
+
+**Step 2 — The Channel pretends to deliver** (in the background)
+- For each message it rolls the dice: ~95% get **delivered**, then some are
+  **opened**, fewer **read**, fewer **clicked**, a few **convert**; ~5% **fail**.
+- Each step happens after a short random delay (like real life), and each is sent
+  back to the CRM as a separate **callback**.
+- It deliberately does two annoying-but-realistic things: sends some updates
+  **out of order**, and **retries** if the CRM is briefly slow.
+
+**Step 3 — The CRM records updates safely** (`POST /api/receipts`)
+- Checks the secret matches.
+- **Never double-counts:** every update has a unique ID; if the same one arrives
+  twice (because of a retry), the second is ignored.
+- **Never goes backwards:** if a late "opened" arrives *after* "clicked," the
+  status stays at "clicked." Updates only ever move *forward* through the funnel.
+
+**Step 4 — You watch it happen**
+- The campaign page polls for stats and the funnel chart fills in live, topped
+  with a plain-English AI insight.
+
+✅ **All of this was tested end-to-end against the real database**, including the
+tricky cases:
+- *77 updates received → 77 counted (no duplicates), even with retries.*
+- *Scrambled, out-of-order updates → status never moved backward.*
+
+---
+
+## 🛡️ The clever bit: AI that can't break your database
+
+A natural worry: *"if an AI is choosing customers, can it run something
+dangerous?"* PulseCRM is designed so the answer is **no, by construction.**
+
+The AI **never writes SQL**. It only outputs a tiny, fixed-shape JSON "recipe":
 
 ```json
 { "all": [
@@ -100,114 +137,141 @@ The LLM **never writes SQL**. It outputs a small, fixed-schema JSON filter:
 ] }
 ```
 
-This passes through three layers (`crm-backend/api/app/lib/`):
+That recipe goes through three gates before touching the database:
 
-1. **`segment_schema.py`** — the allowed fields, types, and operators (single
-   source of truth; the AI's system prompt is generated _from_ this so they can't drift).
-2. **`segment_validator.py`** — a strict whitelist gate. Unknown field/operator/value
-   shape → rejected with a user-safe message. _This is what makes AI output safe to run._
-3. **`segment_compiler.py`** — compiles the validated filter into a **parameterized
-   SQLAlchemy query**. Every value is a bound parameter — **SQL injection is impossible
-   by construction**, even though an LLM produced the input.
+1. **Schema** (`segment_schema.py`) — the official list of allowed fields and
+   operators. The AI's instructions are *generated from this list*, so they can
+   never disagree.
+2. **Validator** (`segment_validator.py`) — a strict bouncer. Anything not on the
+   allowed list is rejected with a friendly message. *This is what makes the AI's
+   output safe to run.*
+3. **Compiler** (`segment_compiler.py`) — turns the approved recipe into a real
+   database query where **every value is a safely-bound parameter**. SQL injection
+   is impossible even though an AI produced the input.
 
-Derived fields (`total_spend`, `order_count`, `last_order_at`) are **computed at
-query time** from the `Order` table (grouped subquery + LEFT JOIN), never stored —
-so they can't drift out of sync.
+Numbers like *total spend* and *last order date* are **calculated live** from the
+orders table, so they're always accurate and never go stale.
 
 ---
 
-## Data model (SQLModel)
+## 🗃️ What's stored (the data model)
 
-| Table | Purpose |
+| Table | In plain words |
 |---|---|
-| **Customer** | name, email, phone, city, tags (JSON). Spend/recency derived in queries. |
-| **Order** | customer_id, amount, items (JSON), status, created_at. |
-| **Campaign** | name, goal, channel, segment_definition (JSON), message_template, status. |
-| **Communication** | one row per (campaign, customer): rendered_message, status, converted_order_id. |
-| **CommunicationEvent** | append-only callback log. `event_id` is UNIQUE (idempotency key). |
+| **Customer** | A shopper: name, email, city, tags. (Spend & recency are computed, not stored.) |
+| **Order** | A purchase: amount, items, date. |
+| **Campaign** | A marketing blast: its goal, audience recipe, message, status. |
+| **Communication** | One message to one customer, with its current status. |
+| **CommunicationEvent** | A log of every delivery update received (each has a unique ID — this is what prevents double-counting). |
 
 ---
 
-## Running locally
+## ▶️ Run it on your machine
 
-### Prerequisites
-- Python 3.11+, Node 18+, a Supabase Postgres URL, a Groq API key.
-- **Network note:** some ISPs/routers block outbound Postgres ports (5432/6543).
-  If the API can't reach Supabase, use a VPN (Cloudflare WARP works) or a mobile
-  hotspot. This only affects local dev — Render is unrestricted.
+### You'll need
+- **Python 3.11+**, **Node 18+**
+- A **Supabase** database URL and a **Groq** API key (both free to create)
 
-### 1. CRM API
+> **⚠️ Network gotcha:** some home/college/office Wi-Fi blocks the database port.
+> If the API can't connect to Supabase, turn on a VPN (**Cloudflare WARP** works
+> great and is free) or use a phone hotspot. This only affects *local* development
+> — the deployed version on Render is never blocked.
+
+Open **three terminals**, one per service:
+
+**Terminal 1 — the CRM API (the brain)**
 ```bash
 cd crm-backend/api
-python -m venv .venv && .venv/Scripts/activate      # (Windows: .venv\Scripts\activate)
+python -m venv .venv
+.venv\Scripts\activate            # Windows
+# source .venv/bin/activate       # macOS / Linux
 pip install -r requirements.txt
-cp .env.example .env      # then fill in DATABASE_URL, GROQ_API_KEY, etc.
-python -m app.seed        # seed ~500 customers + ~2000 orders
+copy .env.example .env            # then fill in DATABASE_URL, GROQ_API_KEY, ...
+python -m app.seed                # creates ~500 demo customers + ~2000 orders
 uvicorn main:app --reload --port 8000
 ```
 
-### 2. Channel service
+**Terminal 2 — the Channel (fake messaging provider)**
 ```bash
 cd crm-backend/channel
-python -m venv .venv && .venv/Scripts/activate
+python -m venv .venv
+.venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env      # set CALLBACK_SECRET to MATCH the api's CALLBACK_SECRET
+copy .env.example .env            # set CALLBACK_SECRET to the SAME value as the API's
 uvicorn main:app --reload --port 8001
 ```
 
-### 3. Frontend
+**Terminal 3 — the Frontend (the UI)**
 ```bash
 cd crm-frontend
 npm install
-cp .env.example .env      # VITE_API_URL=http://localhost:8000
-npm run dev               # http://localhost:5173
+copy .env.example .env            # VITE_API_URL=http://localhost:8000
+npm run dev                       # opens http://localhost:5173
 ```
 
-Open http://localhost:5173 → **Campaign Builder** → type an intent → launch → watch
-the funnel fill on the campaign detail page.
+Then visit **http://localhost:5173**, go to **Campaign Builder**, type something
+like *"win back customers who haven't ordered in 30 days"*, and launch it. Watch
+the campaign page fill in live.
 
 ---
 
-## Deployment
+## ☁️ Deploying it
 
-- **Frontend → Vercel**: set `VITE_API_URL` to the Render API URL.
-- **CRM API → Render** (web service): root `crm-backend/api`, start
-  `uvicorn main:app --host 0.0.0.0 --port $PORT`. Set all `api/.env` vars.
-- **Channel → Render** (web service): root `crm-backend/channel`, start
-  `uvicorn main:app --host 0.0.0.0 --port $PORT`. `CALLBACK_SECRET` must match the API.
-  Point the API's `CHANNEL_SERVICE_URL` and `CRM_BASE_URL` at the deployed URLs.
+| Piece | Where | How |
+|---|---|---|
+| **Frontend** | Vercel | Build `npm run build`, output `dist/`. Set `VITE_API_URL` to the API's URL. |
+| **CRM API** | Render | Root `crm-backend/api`, start `uvicorn main:app --host 0.0.0.0 --port $PORT`. |
+| **Channel** | Render | Root `crm-backend/channel`, same start command on its own URL. |
 
----
-
-## What I chose **NOT** to build (and why)
-
-- **A real messaging integration.** The channel is a faithful _simulator_ — the
-  assignment explicitly asks not to integrate a real provider, and the interesting
-  engineering (async funnel, retries, idempotency, ordering) is all exercised without one.
-- **A durable queue.** The channel fires callbacks from in-process `asyncio` tasks
-  bounded by a `Semaphore`. **At real scale** this would be a queue (SQS / Redis /
-  QStash) feeding a worker pool, with a dead-letter queue for exhausted retries — see
-  `crm-backend/channel/README.md`. This is an intentional, documented simplification.
-- **Auth / multi-tenancy.** Out of scope for a single-marketer take-home.
-- **Sales/support CRM features** (deals, pipelines, tickets) — explicitly excluded by the brief.
-- **Arbitrary nested segment logic.** The filter supports one level of `all`/`any`
-  (AND/OR), which covers real marketing segments while keeping the validator and
-  compiler trivially auditable and injection-safe.
-- **Migrations.** Tables are created via SQLModel `create_all` on boot (idempotent).
-  A production app would use Alembic.
+`crm-backend/render.yaml` describes both backend services so Render can set them
+up from one repo. After deploying, point the API's `CHANNEL_SERVICE_URL` and
+`CRM_BASE_URL` at the live URLs, and make sure `CALLBACK_SECRET` matches on both.
 
 ---
 
-## Repo layout
+## 🚧 What I deliberately *didn't* build (and why)
+
+Being clear about scope is part of good engineering:
+
+- **A real messaging integration.** The brief says not to, and the *interesting*
+  parts (async delivery, retries, no-double-counting, out-of-order handling) are
+  all there in the simulator anyway.
+- **A heavy-duty job queue.** The Channel sends callbacks using lightweight
+  in-process async tasks with a concurrency cap. At real scale you'd swap this for
+  a proper queue (SQS / Redis / QStash) and worker pool — explained in
+  [`crm-backend/channel/README.md`](crm-backend/channel/README.md). The CRM side
+  is already built to handle that reality.
+- **Login / multiple accounts.** Not needed for a single-marketer demo.
+- **Sales-CRM features** (deals, pipelines, support tickets). Explicitly out of
+  scope — this is a tool for *reaching shoppers*, not managing a sales team.
+- **Complex nested filters.** One level of AND/OR covers real marketing segments
+  and keeps the safety checks simple to audit.
+
+---
+
+## 🗂️ Where things live
 
 ```
-crm-frontend/                 → Vercel
-  src/{pages,components,api,lib}
-crm-backend/                  → Render (two services from one repo)
-  api/      app/{routers,services,lib}, models.py, schemas.py, seed.py, main.py
-  channel/  app/{simulator,callbacks}, main.py
+crm-frontend/                        the UI  → Vercel
+  src/pages/        Dashboard, Chat (builder), Campaigns, CampaignDetail, Customers
+  src/components/   reusable UI bits (Sidebar, Card, StatTile, charts…)
+  src/api/          typed wrappers that call the backend
+  src/lib/          shared types & formatting helpers
+
+crm-backend/                         → Render (two services, one repo)
+  api/        the brain
+    app/routers/    HTTP endpoints (thin — just receive & respond)
+    app/services/   the actual logic
+    app/lib/        the segment pipeline + the status rules
+    app/models.py   the database tables
+    app/seed.py     demo-data generator
+  channel/    the fake messaging provider
+    app/simulator.py   decides each message's fate (delivered/opened/…)
+    app/callbacks.py   sends updates back, with retries + concurrency limit
+  render.yaml        deployment config for both
 ```
 
-Each service has its own `requirements.txt` / `package.json`, `.env.example`, and
-its own start command. See each folder for details; `crm-backend/channel/README.md`
-covers the scale story for the messaging layer.
+Each folder has its own README with more detail:
+[`crm-backend/api`](crm-backend/api/README.md) ·
+[`crm-backend/channel`](crm-backend/channel/README.md) ·
+[`crm-frontend`](crm-frontend/README.md)
