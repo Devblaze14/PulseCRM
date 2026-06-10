@@ -172,11 +172,6 @@ orders table, so they're always accurate and never go stale.
 - **Python 3.11+**, **Node 18+**
 - A **Supabase** database URL and a **Groq** API key (both free to create)
 
-> **⚠️ Network gotcha:** some home/college/office Wi-Fi blocks the database port.
-> If the API can't connect to Supabase, turn on a VPN (**Cloudflare WARP** works
-> great and is free) or use a phone hotspot. This only affects *local* development
-> — the deployed version on Render is never blocked.
-
 Open **three terminals**, one per service:
 
 **Terminal 1 — the CRM API (the brain)**
