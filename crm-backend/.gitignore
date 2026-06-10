@@ -18,8 +18,13 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+/lib/
 lib64/
+
+# NOTE: the build-output `lib/` rule above is anchored with a leading slash so
+# it only matches a top-level build dir — NOT the application source package
+# `app/lib/` (db engine, segment compiler, etc.), which MUST be committed.
+!api/app/lib/
 parts/
 sdist/
 var/
@@ -61,5 +66,8 @@ desktop.ini
 
 # ─── Scratch ────────────────────────────────────────────────────────────────
 # Throwaway test/probe scripts (we used a few during development).
+# NOTE: must NOT swallow dunder files like __init__.py — those are real package
+# markers. The negation below re-includes every __init__.py the rule would catch.
 _*.py
+!__init__.py
 *.log
