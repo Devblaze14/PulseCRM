@@ -124,13 +124,6 @@ Derived metrics like total spend and last order date are computed live from the 
 | Communication | One message to one customer, with its current status. |
 | CommunicationEvent | A log of every delivery update received. Each has a unique ID — that's what prevents double-counting. |
 
-## Running locally
-
-### Prerequisites
-- Python 3.11+ and Node 18+
-- A Supabase database URL and a Groq API key (both free to create)
-
-> Some home, college, or office networks block the database port. If the API can't reach Supabase, turn on a VPN (Cloudflare WARP works well and is free) or use a phone hotspot. This only affects local development — the deployed version on Render isn't blocked.
 
 Open three terminals, one per service.
 
