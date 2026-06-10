@@ -13,6 +13,7 @@ Run locally:  uvicorn main:app --reload --port 8001
 from __future__ import annotations
 
 import asyncio
+import hmac
 import os
 
 from fastapi import FastAPI, HTTPException
@@ -60,7 +61,10 @@ async def send(req: SendRequest) -> dict:
     returns at once — the CRM is never blocked on delivery.
     """
     # Reject a caller whose secret doesn't match ours (when one is configured).
-    if EXPECTED_SECRET and req.callback_secret != EXPECTED_SECRET:
+    # Constant-time compare avoids leaking the secret via response timing.
+    if EXPECTED_SECRET and not hmac.compare_digest(
+        req.callback_secret, EXPECTED_SECRET
+    ):
         raise HTTPException(status_code=401, detail="Invalid callback_secret.")
 
     plans = [plan_outcomes(m.communication_id) for m in req.messages]

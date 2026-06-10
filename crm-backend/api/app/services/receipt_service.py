@@ -19,6 +19,8 @@ We return 2xx quickly so the channel doesn't needlessly retry.
 
 from __future__ import annotations
 
+import hmac
+
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session
 
@@ -39,7 +41,8 @@ class ReceiptAuthError(Exception):
 
 def process_receipt(session: Session, receipt: ReceiptIn) -> ReceiptResult:
     # --- 1) Authenticate the callback ------------------------------------
-    if receipt.callback_secret != settings.CALLBACK_SECRET:
+    # Constant-time compare avoids leaking the secret via response timing.
+    if not hmac.compare_digest(receipt.callback_secret, settings.CALLBACK_SECRET):
         raise ReceiptAuthError("Invalid callback secret.")
 
     # --- validate event_type maps to a known status ----------------------

@@ -63,8 +63,9 @@ def plan_outcomes(communication_id: int) -> SimPlan:
 
     We assign each event a CUMULATIVE delay along a timeline and an occurred_at
     that matches that timeline. `occurred_at` always reflects the TRUE order even
-    when we deliberately send the callbacks out of order — that's exactly the
-    signal the CRM relies on to recover the real sequence.
+    when we deliberately send the callbacks out of order; it's carried as an audit
+    record of the channel's real timeline. (The CRM keeps status monotonic via the
+    rank-based status machine rather than by reading occurred_at.)
     """
     now = datetime.now(timezone.utc)
     events: list[SimEvent] = []
@@ -112,8 +113,8 @@ def plan_outcomes(communication_id: int) -> SimPlan:
     # (e.g. READ) physically arrives before an earlier one (e.g. OPENED).
     #
     # We intentionally do NOT touch occurred_at: it keeps encoding the true
-    # timeline, which is the signal the CRM's status machine uses to avoid
-    # regressing status when callbacks land out of order.
+    # timeline as an audit record. The CRM's rank-based status machine is what
+    # actually prevents status from regressing when callbacks land out of order.
     if len(events) >= 2 and random.random() < P_OUT_OF_ORDER:
         i = random.randint(0, len(events) - 2)
         events[i].delay, events[i + 1].delay = (
