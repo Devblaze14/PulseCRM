@@ -11,10 +11,10 @@ You set the goal; the AI handles the tedious parts (building the audience, writi
 A typical run takes about half a minute:
 
 1. In the Campaign Builder you type a target audience: *"customers in Mumbai who spent over ₹5,000."*
-2. PulseCRM resolves the segment live ("312 customers match") and shows a sample list so you can sanity-check the audience before committing.
+2. PulseCRM resolves the segment live ("312 customers match"), shows a sample list so you can sanity-check the audience, and prints a one-line rationale explaining the segment it chose (*"lapsed high-value: 2+ orders, nothing in 60 days"*) so you understand the AI's reasoning before committing.
 3. It drafts a message you can edit, e.g. *"Hi {name}, here's 15% off just for you 🛍️"*.
 4. You pick a channel (WhatsApp / SMS / Email) and launch.
-5. The campaign page updates live through the funnel — delivered, opened, clicked, converted — with a short AI summary like *"Strong 28% click rate; next, improve the landing page to lift conversions."*
+5. The campaign page updates live through the funnel — delivered, opened, clicked, converted — alongside the **attributed revenue** each conversion drove (sampled from each customer's own order history), with a short AI summary like *"Strong 28% click rate; next, improve the landing page to lift conversions."* The dashboard rolls the same revenue up across every campaign.
 
 No spreadsheets, SQL, or manual segmentation.
 

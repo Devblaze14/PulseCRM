@@ -40,6 +40,19 @@ uvicorn main:app --reload --port 8000
 
 Interactive API docs at http://localhost:8000/docs.
 
+## Tests
+
+```bash
+pytest                      # from crm-backend/api
+```
+
+`tests/` runs on in-memory SQLite (no DB or Groq key needed) and pins the
+engine-portable invariants: conversion replays are counted once (idempotency),
+status never regresses on out-of-order callbacks, `attributed_amount` sums into
+`attributed_revenue`, a segment proposal with no AI rationale still previews, and
+the validator still rejects unknown filter fields. Postgres-specific behaviour
+(JSON operators) is left to the live database rather than approximated on SQLite.
+
 ## Seed
 
 `python -m app.seed` wipes and regenerates customers + orders. Personas control
