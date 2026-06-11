@@ -134,48 +134,99 @@ _CHANNEL_HINTS = {
 }
 
 
-def draft_message(goal: str, channel: str, segment_summary: str) -> AIResult:
-    """Draft a channel-appropriate message with a {name} placeholder.
+# Things that make win-back/marketing copy read as generic AI sludge. Banning
+# them explicitly forces the model off the statistical mean and toward specifics.
+_ANTI_CLICHE_RULES = (
+    "Do NOT open with \"We've missed you\", \"Long time no see\", or \"It's been "
+    "a while\".\n"
+    "Do NOT make a bare discount the entire message (\"get X% off\") — if there's "
+    "an offer, frame it around a reason or a specific product moment.\n"
+    "Do NOT use hollow filler: \"amazing deals\", \"don't miss out\", \"exclusive "
+    "offer\", \"limited time\", \"shop now\" as the whole CTA.\n"
+    "DO lead with a concrete hook, a point of view, or a specific detail. Each "
+    "variant must take a genuinely DIFFERENT angle from the others."
+)
 
-    On failure we fall back to a generic-but-usable template so the marketer is
-    never blocked — they can always edit it before sending.
+# How many distinct copy options we ask the model for.
+_VARIANT_COUNT = 3
+
+
+def _draft_fallbacks(goal: str) -> list[str]:
+    """Deterministic, distinct fallbacks used when the LLM is unavailable, so the
+    marketer still gets choices (not one bland line) and is never blocked."""
+    g = goal.strip().rstrip(".")
+    return [
+        f"Hi {{name}}, your cart's been quiet lately. {g} — want a hand picking "
+        "up where you left off?",
+        f"Hi {{name}}, quick one: {g.lower()}. Tap through whenever you're ready.",
+        f"Hi {{name}}, we set something aside with you in mind. {g}.",
+    ]
+
+
+def draft_message(
+    goal: str,
+    channel: str,
+    segment_summary: str,
+    brand_voice: Optional[str] = None,
+) -> AIResult:
+    """Draft THREE distinct, channel-appropriate message variants, each with a
+    {name} placeholder, in the configured (or overridden) brand voice.
+
+    Returns AIResult where `data["messages"]` is the list of variants. On failure
+    we fall back to distinct deterministic drafts so the marketer is never blocked.
     """
     client = _get_client()
-    fallback = (
-        f"Hi {{name}}, we miss you! {goal.strip().rstrip('.')}. "
-        "Tap to shop now."
-    )
+    voice = (brand_voice or settings.BRAND_VOICE).strip()
+    fallbacks = _draft_fallbacks(goal)
     if client is None:
-        return AIResult(ok=True, text=fallback,
-                        error="AI unavailable — using a fallback draft.")
+        return AIResult(ok=True, data={"messages": fallbacks},
+                        error="AI unavailable — using fallback drafts.")
 
     hint = _CHANNEL_HINTS.get(channel.upper(), "Keep it short and on-brand.")
     system = (
-        "You are a DTC brand's marketing copywriter. Write ONE message for the "
-        "given channel. Use the literal placeholder {name} for the recipient's "
-        "first name. Return ONLY the message text, no quotes, no preamble."
+        f"You are the copywriter for {voice}.\n"
+        f"Write EXACTLY {_VARIANT_COUNT} alternative messages for ONE marketing "
+        "campaign, each a different creative angle the marketer can choose between.\n"
+        "Use the literal placeholder {name} for the recipient's first name in "
+        "every variant.\n\n"
+        f"Rules:\n{_ANTI_CLICHE_RULES}\n\n"
+        "Return ONLY a JSON object of the shape "
+        '{"messages": ["...", "...", "..."]} and nothing else.'
     )
     user = (
         f"Channel: {channel}\nChannel guidance: {hint}\n"
-        f"Campaign goal: {goal}\nAudience: {segment_summary}\n"
-        "Write the message now."
+        f"Campaign goal: {goal}\nAudience: {segment_summary or 'the selected segment'}\n"
+        f"Write the {_VARIANT_COUNT} variants now."
     )
     try:
         resp = client.chat.completions.create(
             model=settings.GROQ_MODEL,
             messages=[{"role": "system", "content": system},
                      {"role": "user", "content": user}],
-            temperature=0.7,  # a little creativity for copy
-            max_tokens=200,
+            response_format={"type": "json_object"},  # force parseable variants
+            temperature=0.9,  # higher: we WANT spread across the three angles
+            max_tokens=500,
         )
-        text = (resp.choices[0].message.content or "").strip()
-        if "{name}" not in text:
-            # Ensure the personalisation token is present for rendering later.
-            text = "Hi {name}, " + text
-        return AIResult(ok=True, text=text)
+        raw = resp.choices[0].message.content or "{}"
+        parsed = json.loads(raw)
+        messages = parsed.get("messages")
+        if not isinstance(messages, list) or not messages:
+            raise ValueError("model did not return a non-empty messages list")
+        # Normalise: strings only, ensure {name} is present, drop blanks.
+        cleaned: list[str] = []
+        for m in messages:
+            if not isinstance(m, str) or not m.strip():
+                continue
+            text = m.strip()
+            if "{name}" not in text:
+                text = "Hi {name}, " + text
+            cleaned.append(text)
+        if not cleaned:
+            raise ValueError("no usable variants after cleaning")
+        return AIResult(ok=True, data={"messages": cleaned})
     except Exception:
-        return AIResult(ok=True, text=fallback,
-                        error="AI unavailable — using a fallback draft.")
+        return AIResult(ok=True, data={"messages": fallbacks},
+                        error="AI unavailable — using fallback drafts.")
 
 
 # --------------------------------------------------------------------------- #

@@ -53,6 +53,9 @@ export interface IntentResponse {
 
 export interface DraftResponse {
   ok: boolean;
+  // Up to three distinct copy variants the marketer can choose between.
+  messages: string[];
+  // First variant, kept for back-compat with older call sites.
   message: string;
   note?: string | null;
 }

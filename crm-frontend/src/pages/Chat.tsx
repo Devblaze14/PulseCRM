@@ -31,6 +31,8 @@ export default function Chat() {
   const [goal, setGoal] = useState("");
   const [channel, setChannel] = useState<Channel>("WHATSAPP");
   const [message, setMessage] = useState("");
+  // The AI's alternative copy variants; the marketer picks one into `message`.
+  const [variants, setVariants] = useState<string[]>([]);
   const [name, setName] = useState("");
   const [launching, setLaunching] = useState(false);
 
@@ -70,7 +72,8 @@ export default function Chat() {
     // 2) Draft a channel-appropriate message for this audience.
     const summary = `${res.preview.count} customers`;
     const draft = await ai.draftMessage(text, channel, summary);
-    setMessage(draft.message);
+    setVariants(draft.messages);
+    setMessage(draft.messages[0] ?? draft.message);
     if (!name) setName(text.slice(0, 40));
     setLoading(false);
   }
@@ -80,7 +83,8 @@ export default function Chat() {
     setChannel(ch);
     if (!goal) return;
     const draft = await ai.draftMessage(goal, ch, `${preview?.count ?? 0} customers`);
-    setMessage(draft.message);
+    setVariants(draft.messages);
+    setMessage(draft.messages[0] ?? draft.message);
   }
 
   async function launch() {
@@ -188,6 +192,33 @@ export default function Chat() {
                     ))}
                   </div>
                 </div>
+
+                {variants.length > 1 && (
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-500">
+                      AI suggestions — pick one to edit
+                    </label>
+                    <div className="space-y-2">
+                      {variants.map((v, i) => {
+                        const selected = v === message;
+                        return (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => setMessage(v)}
+                            className={`block w-full rounded-lg border px-3 py-2 text-left text-sm ${
+                              selected
+                                ? "border-brand-500 bg-brand-50 text-brand-900"
+                                : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            {v}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <label className="mb-1 block text-xs font-medium text-slate-500">

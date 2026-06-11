@@ -49,10 +49,15 @@ def intent_to_segment(
 
 @router.post("/draft-message", response_model=DraftResponse)
 def draft_message(body: DraftRequest) -> DraftResponse:
-    """Draft a channel-appropriate message with a {name} placeholder."""
-    result = ai_service.draft_message(body.goal, body.channel, body.segment_summary)
+    """Draft three distinct channel-appropriate variants, each with a {name}
+    placeholder, in the configured (or per-request) brand voice."""
+    result = ai_service.draft_message(
+        body.goal, body.channel, body.segment_summary, body.brand_voice
+    )
+    messages = (result.data or {}).get("messages", [])
     return DraftResponse(
         ok=result.ok,
-        message=result.text or "",
+        messages=messages,
+        message=messages[0] if messages else "",  # first variant, for back-compat
         note=result.error,  # populated only when a fallback was used
     )

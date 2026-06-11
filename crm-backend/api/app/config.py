@@ -30,6 +30,16 @@ class Settings(BaseSettings):
     GROQ_API_KEY: str = ""
     GROQ_MODEL: str = "llama-3.3-70b-versatile"
 
+    # --- Brand voice ------------------------------------------------------
+    # Default copywriting persona injected into draft_message. A campaign can
+    # override this per-request via DraftRequest.brand_voice. Keeping it here
+    # (not hardcoded in the prompt) makes the brand's tone configurable per
+    # deployment without a code change.
+    BRAND_VOICE: str = (
+        "a warm, human direct-to-consumer brand that sounds like a small team "
+        "writing to a friend — sincere, specific, never corporate"
+    )
+
     # --- Inter-service wiring --------------------------------------------
     # URL of the separate channel microservice the CRM calls over HTTP.
     CHANNEL_SERVICE_URL: str = "http://localhost:8001"

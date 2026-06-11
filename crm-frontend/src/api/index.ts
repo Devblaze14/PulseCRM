@@ -18,11 +18,17 @@ import type {
 export const ai = {
   intentToSegment: (text: string) =>
     api.post<IntentResponse>("/api/ai/intent-to-segment", { text }),
-  draftMessage: (goal: string, channel: string, segment_summary: string) =>
+  draftMessage: (
+    goal: string,
+    channel: string,
+    segment_summary: string,
+    brand_voice?: string,
+  ) =>
     api.post<DraftResponse>("/api/ai/draft-message", {
       goal,
       channel,
       segment_summary,
+      brand_voice,
     }),
 };
 

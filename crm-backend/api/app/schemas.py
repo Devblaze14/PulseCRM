@@ -71,10 +71,17 @@ class DraftRequest(BaseModel):
     goal: str
     channel: str
     segment_summary: str = ""
+    # Optional per-request override of the deployment's default BRAND_VOICE.
+    # Lets a marketer steer tone ("playful", "premium") without changing config.
+    brand_voice: Optional[str] = None
 
 
 class DraftResponse(BaseModel):
     ok: bool
+    # Three distinct copy variants for the marketer to choose from. `message`
+    # is kept as a convenience alias for the first variant so older callers
+    # don't break while the frontend migrates to the variant picker.
+    messages: list[str]
     message: str
     note: Optional[str] = None  # e.g. "AI unavailable — using a fallback draft."
 
