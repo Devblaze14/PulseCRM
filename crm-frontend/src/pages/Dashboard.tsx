@@ -15,7 +15,7 @@ import StatTile from "../components/StatTile";
 import StatusBadge from "../components/StatusBadge";
 import { campaigns as campaignsApi, stats as statsApi } from "../api";
 import type { Campaign, CampaignStats } from "../lib/types";
-import { pct, shortDate } from "../lib/format";
+import { inr, pct, shortDate } from "../lib/format";
 
 export default function Dashboard() {
   const [overview, setOverview] = useState<CampaignStats | null>(null);
@@ -54,7 +54,7 @@ export default function Dashboard() {
         )}
 
         {/* Stat tiles */}
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
           <StatTile
             label="Messages sent"
             value={overview?.sent ?? "—"}
@@ -75,6 +75,11 @@ export default function Dashboard() {
             value={overview?.converted ?? "—"}
             sub={overview ? pct(overview.conversion_rate) + " of delivered" : ""}
             accent="brand"
+          />
+          <StatTile
+            label="Attributed revenue"
+            value={overview ? inr(overview.attributed_revenue) : "—"}
+            accent="emerald"
           />
         </div>
 

@@ -29,6 +29,11 @@ P_CONVERTED = 0.20   # of clicked
 # Per-stage delay range (seconds) — kept short so demos complete quickly.
 DELAY_MIN, DELAY_MAX = 0.5, 6.0
 
+# Attributed order value range (INR) for a conversion. The actual amount is
+# derived DETERMINISTICALLY from the communication_id (see _conversion_amount)
+# so the same conversion always reports the same money — replays don't drift.
+CONV_AMOUNT_MIN, CONV_AMOUNT_MAX = 499, 7999
+
 # Probability that we shuffle a generated sequence slightly out of order before
 # sending, to stress-test the CRM's rank-based status machine.
 P_OUT_OF_ORDER = 0.25
@@ -41,6 +46,10 @@ class SimEvent:
     event_id: str            # uuid4 idempotency key
     delay: float             # seconds to wait (cumulative timeline) before sending
     occurred_at: datetime    # the channel's notion of when it happened
+    # Order value attributed to a CONVERTED event (INR). None for non-conversions.
+    # Deterministic per communication so a replayed callback carries the SAME
+    # amount — the CRM's idempotency guard then makes re-attribution a no-op.
+    order_amount: float | None = None
 
 
 @dataclass
@@ -56,6 +65,20 @@ def _new_event(event_type: str, occurred_at: datetime, delay: float) -> SimEvent
         delay=delay,
         occurred_at=occurred_at,
     )
+
+
+def _conversion_amount(communication_id: int) -> float:
+    """A stable, deterministic order value (INR) for a conversion.
+
+    Derived from communication_id alone — NOT from random.* — so it is identical
+    every time this message converts, including on a retried/replayed callback.
+    That stability is what lets the CRM treat a duplicate conversion event as a
+    true no-op (same event_id, same amount) and never double-count revenue.
+    """
+    span = CONV_AMOUNT_MAX - CONV_AMOUNT_MIN
+    # Simple, stable hash of the id into the [MIN, MAX] band, rounded to whole ₹.
+    amount = CONV_AMOUNT_MIN + (communication_id * 2654435761) % (span + 1)
+    return float(amount)
 
 
 def plan_outcomes(communication_id: int) -> SimPlan:
@@ -101,9 +124,11 @@ def plan_outcomes(communication_id: int) -> SimPlan:
 
                 if random.random() < P_CONVERTED:
                     d = step()
-                    events.append(
-                        _new_event("CONVERTED", now + timedelta(seconds=d), d)
-                    )
+                    conv = _new_event("CONVERTED", now + timedelta(seconds=d), d)
+                    # Attach a deterministic order value so the CRM can attribute
+                    # revenue to this communication.
+                    conv.order_amount = _conversion_amount(communication_id)
+                    events.append(conv)
 
     # Deliberately make callbacks ARRIVE out of order sometimes.
     #

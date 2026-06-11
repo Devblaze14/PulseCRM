@@ -64,6 +64,9 @@ class IntentResponse(BaseModel):
     ok: bool
     filter: Optional[dict[str, Any]] = None
     preview: Optional[SegmentPreviewResponse] = None
+    # One-line plain-English explanation of the proposed segment, shown next to
+    # the audience preview. Optional: absent when the model omits it or AI fails.
+    rationale: Optional[str] = None
     error: Optional[str] = None
 
 
@@ -128,6 +131,7 @@ class CommunicationRead(BaseModel):
     rendered_message: str
     status: CommStatus
     converted_order_id: Optional[int] = None
+    attributed_amount: Optional[float] = None
     created_at: datetime
     updated_at: datetime
 
@@ -143,6 +147,9 @@ class ReceiptIn(BaseModel):
     occurred_at: datetime
     callback_secret: str
     converted_order_id: Optional[int] = None
+    # Order value attributed to this communication on conversion (INR). Optional
+    # so non-conversion events (and older callers) omit it harmlessly.
+    order_amount: Optional[float] = None
 
 
 class ReceiptResult(BaseModel):
@@ -171,4 +178,7 @@ class CampaignStats(BaseModel):
     open_rate: float
     click_rate: float
     conversion_rate: float
+    # Total INR attributed to conversions in this scope (campaign or overall).
+    # Defaults to 0.0 so zero-conversion / pre-attribution campaigns render fine.
+    attributed_revenue: float = 0.0
     ai_summary: Optional[str] = None

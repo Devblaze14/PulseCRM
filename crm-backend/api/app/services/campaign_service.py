@@ -58,6 +58,7 @@ def list_communications(
             rendered_message=c.rendered_message,
             status=c.status,
             converted_order_id=c.converted_order_id,
+            attributed_amount=c.attributed_amount,
             created_at=c.created_at,
             updated_at=c.updated_at,
         )

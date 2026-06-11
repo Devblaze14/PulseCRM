@@ -33,18 +33,26 @@ def intent_to_segment(
     if not ai_result.ok:
         return IntentResponse(ok=False, error=ai_result.error)
 
-    # Server-side validation: the AI's output is untrusted input.
+    # Server-side validation: the AI's output is untrusted input. Note we
+    # validate ONLY the filter doc — `rationale` was split off in the service and
+    # never reaches the validator, so the segment gate is unchanged.
     try:
         validate_segment(ai_result.data)
     except SegmentValidationError as e:
         return IntentResponse(
             ok=False,
             filter=ai_result.data,
+            rationale=ai_result.rationale,
             error=f"AI produced an invalid segment: {e}",
         )
 
     preview = segment_service.preview_segment(session, ai_result.data)
-    return IntentResponse(ok=True, filter=ai_result.data, preview=preview)
+    return IntentResponse(
+        ok=True,
+        filter=ai_result.data,
+        preview=preview,
+        rationale=ai_result.rationale,
+    )
 
 
 @router.post("/draft-message", response_model=DraftResponse)

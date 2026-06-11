@@ -54,6 +54,9 @@ class AIResult:
     data: Optional[dict] = None
     text: Optional[str] = None
     error: Optional[str] = None
+    # One-line plain-English explanation of a proposed segment. Metadata only —
+    # never validated or executed. None when the model omitted it.
+    rationale: Optional[str] = None
 
 
 # --------------------------------------------------------------------------- #
@@ -73,8 +76,13 @@ _SEGMENT_SYSTEM_PROMPT = f"""You are a marketing audience-segmentation engine fo
 Translate the marketer's plain-English intent into a STRUCTURED JSON FILTER. You do NOT write SQL.
 
 Output a single JSON object with EXACTLY this shape:
-  {{ "all": [ {{ "field": <field>, "op": <operator>, "value": <value> }}, ... ] }}
-Use "all" for AND logic, "any" for OR logic. Exactly one of "all"/"any" at the top level.
+  {{
+    "filter": {{ "all": [ {{ "field": <field>, "op": <operator>, "value": <value> }}, ... ] }},
+    "rationale": <one short plain-English sentence explaining the segment>
+  }}
+Inside "filter", use "all" for AND logic, "any" for OR logic. Exactly one of "all"/"any".
+"rationale" is a brief human explanation (e.g. "lapsed high-value: 2+ orders, nothing in 60 days").
+Keep it to one line; it is shown to the marketer, never executed.
 
 Allowed fields and their operators (use ONLY these — anything else is rejected):
 {_segment_schema_spec()}
@@ -87,6 +95,45 @@ Value rules:
   - For "in" on city, value is a list of strings.
 
 Return ONLY the JSON object, no commentary."""
+
+
+# --------------------------------------------------------------------------- #
+#  Filter / rationale separation
+# --------------------------------------------------------------------------- #
+def _split_filter_and_rationale(parsed: dict) -> tuple[dict, Optional[str]]:
+    """Separate the executable filter from the human rationale BEFORE validation.
+
+    This is the clean boundary that keeps rationale out of the segment gate: the
+    validator only ever sees the {all|any:[...]} filter doc and keeps rejecting
+    unknown FILTER fields/operators; `rationale` is peeled off here as harmless
+    metadata. We tolerate three shapes so a model that ignores the wrapper, or
+    omits the rationale, still works:
+
+      * {"filter": {all|any:[...]}, "rationale": "..."}   (preferred)
+      * {"all"|"any": [...], "rationale": "..."}          (rationale as sibling)
+      * {"all"|"any": [...]}                              (legacy bare filter)
+
+    Returns (filter_doc, rationale_or_None). Never raises — a malformed shape is
+    passed through as the filter for the validator to reject with its own message.
+    """
+    if not isinstance(parsed, dict):
+        return parsed, None
+
+    rationale = parsed.get("rationale")
+    if not isinstance(rationale, str) or not rationale.strip():
+        rationale = None
+    else:
+        rationale = rationale.strip()
+
+    inner = parsed.get("filter")
+    if isinstance(inner, dict):
+        # Preferred wrapped shape: the filter lives under "filter".
+        return inner, rationale
+
+    # Otherwise treat the object itself as the filter, minus the rationale key,
+    # so a sibling-rationale shape doesn't trip the validator's "unexpected key".
+    filter_doc = {k: v for k, v in parsed.items() if k != "rationale"}
+    return filter_doc, rationale
 
 
 # --------------------------------------------------------------------------- #
@@ -115,7 +162,8 @@ def intent_to_segment(text: str) -> AIResult:
         )
         raw = resp.choices[0].message.content or "{}"
         parsed = json.loads(raw)
-        return AIResult(ok=True, data=parsed)
+        filter_doc, rationale = _split_filter_and_rationale(parsed)
+        return AIResult(ok=True, data=filter_doc, rationale=rationale)
     except json.JSONDecodeError:
         return AIResult(ok=False, error="The AI returned invalid JSON. Please rephrase.")
     except Exception as e:  # network, auth, rate limit, etc.

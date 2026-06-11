@@ -70,6 +70,10 @@ async def _deliver_event(
         "occurred_at": event.occurred_at.isoformat(),
         "callback_secret": callback_secret,
     }
+    # Only conversions carry an attributed order value; omit it otherwise so the
+    # callback shape stays minimal for the common (non-conversion) case.
+    if event.order_amount is not None:
+        body["order_amount"] = event.order_amount
     await _post_with_retry(client, callback_url, body)
 
 

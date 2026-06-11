@@ -35,6 +35,14 @@ def compute_stats(
     rows = session.exec(stmt).all()
     counts: dict[CommStatus, int] = {status: n for status, n in rows}
 
+    # Attributed revenue: SUM of per-communication attributed_amount in scope.
+    # Sourced from Communication only (never from Order), so it stays orthogonal
+    # to the segment compiler's derived spend. COALESCE → 0.0 when none converted.
+    revenue_stmt = select(func.coalesce(func.sum(Communication.attributed_amount), 0.0))
+    if campaign_id is not None:
+        revenue_stmt = revenue_stmt.where(Communication.campaign_id == campaign_id)
+    attributed_revenue = float(session.exec(revenue_stmt).one() or 0.0)
+
     failed = counts.get(CommStatus.FAILED, 0)
 
     # "sent" = every message we handed to the channel = all non-FAILED that at
@@ -72,6 +80,7 @@ def compute_stats(
         open_rate=_rate(opened, delivered),
         click_rate=_rate(clicked, delivered),
         conversion_rate=_rate(converted, delivered),
+        attributed_revenue=attributed_revenue,
     )
 
     # Optional one-line AI insight (degrades to a templated line on failure).

@@ -48,6 +48,9 @@ export interface IntentResponse {
   ok: boolean;
   filter?: SegmentFilter;
   preview?: SegmentPreview;
+  // One-line plain-English explanation of the proposed segment. Optional: the
+  // model may omit it, or AI may have failed — the UI just shows nothing then.
+  rationale?: string | null;
   error?: string;
 }
 
@@ -87,6 +90,7 @@ export interface Communication {
   rendered_message: string;
   status: CommStatus;
   converted_order_id?: number | null;
+  attributed_amount?: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -104,5 +108,8 @@ export interface CampaignStats {
   open_rate: number;
   click_rate: number;
   conversion_rate: number;
+  // Total INR attributed to conversions in scope. Defaults to 0 server-side, so
+  // old / zero-conversion campaigns are a safe 0 rather than undefined.
+  attributed_revenue: number;
   ai_summary?: string | null;
 }

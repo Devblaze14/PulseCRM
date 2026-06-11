@@ -15,7 +15,7 @@ import StatTile from "../components/StatTile";
 import StatusBadge from "../components/StatusBadge";
 import { campaigns as campaignsApi } from "../api";
 import type { Campaign, CampaignStats, Communication } from "../lib/types";
-import { pct } from "../lib/format";
+import { inr, pct } from "../lib/format";
 
 export default function CampaignDetail() {
   const { id } = useParams<{ id: string }>();
@@ -95,7 +95,7 @@ export default function CampaignDetail() {
         )}
 
         {/* Stat tiles */}
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
           <StatTile label="Sent" value={stats?.sent ?? "—"} accent="slate" />
           <StatTile
             label="Delivered"
@@ -114,6 +114,16 @@ export default function CampaignDetail() {
             value={stats?.converted ?? "—"}
             sub={stats ? pct(stats.conversion_rate) : ""}
             accent="brand"
+          />
+          <StatTile
+            label="Attributed revenue"
+            value={stats ? inr(stats.attributed_revenue) : "—"}
+            sub={
+              stats
+                ? `${stats.converted} order${stats.converted === 1 ? "" : "s"}`
+                : ""
+            }
+            accent="emerald"
           />
         </div>
 

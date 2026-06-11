@@ -2,14 +2,24 @@ import type { SegmentPreview } from "../lib/types";
 import { inr, relativeDays } from "../lib/format";
 
 // Shows the live audience count + a sample table. Used in the chat builder once
-// the AI proposes a segment.
+// the AI proposes a segment. `rationale` is the AI's one-line explanation of the
+// segment; optional, so the preview renders fine when it's absent.
 export default function AudiencePreview({
   preview,
+  rationale,
 }: {
   preview: SegmentPreview;
+  rationale?: string | null;
 }) {
   return (
     <div>
+      {rationale && (
+        <p className="mb-3 rounded-lg bg-brand-50 px-3 py-2 text-xs italic text-brand-700">
+          <span className="font-semibold not-italic">Why this segment: </span>
+          {rationale}
+        </p>
+      )}
+
       <div className="mb-3 flex items-baseline gap-2">
         <span className="text-2xl font-semibold text-brand-600">
           {preview.count.toLocaleString("en-IN")}

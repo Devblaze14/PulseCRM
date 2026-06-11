@@ -28,6 +28,8 @@ export default function Chat() {
   // The proposed campaign assembled from AI output (editable before launch).
   const [filter, setFilter] = useState<SegmentFilter | null>(null);
   const [preview, setPreview] = useState<SegmentPreview | null>(null);
+  // The AI's one-line explanation of the proposed segment (may be absent).
+  const [rationale, setRationale] = useState<string | null>(null);
   const [goal, setGoal] = useState("");
   const [channel, setChannel] = useState<Channel>("WHATSAPP");
   const [message, setMessage] = useState("");
@@ -59,6 +61,7 @@ export default function Chat() {
     }
     setFilter(res.filter);
     setPreview(res.preview);
+    setRationale(res.rationale ?? null);
     setTurns((t) => [
       ...t,
       {
@@ -149,7 +152,7 @@ export default function Chat() {
         <div className="space-y-6">
           <Card title="Proposed audience">
             {preview ? (
-              <AudiencePreview preview={preview} />
+              <AudiencePreview preview={preview} rationale={rationale} />
             ) : (
               <p className="py-8 text-center text-sm text-slate-400">
                 Your audience preview will appear here.

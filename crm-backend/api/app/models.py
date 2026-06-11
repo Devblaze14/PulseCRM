@@ -113,6 +113,11 @@ class Communication(SQLModel, table=True):
     converted_order_id: Optional[int] = Field(
         default=None, foreign_key="order.id"
     )
+    # Money attributed to this communication on conversion (INR). Stored here —
+    # NOT as a new Order row — so it never inflates the segment compiler's
+    # derived total_spend/order_count/last_order_at (those stay sourced purely
+    # from real Orders). Nullable so every pre-existing row is valid (revenue 0).
+    attributed_amount: Optional[float] = Field(default=None)
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
 

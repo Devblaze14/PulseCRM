@@ -89,9 +89,15 @@ def process_receipt(session: Session, receipt: ReceiptIn) -> ReceiptResult:
     if applied:
         comm.status = new_status
         comm.updated_at = utcnow()
-        # 4) If converted, optionally attribute the order.
-        if new_status == CommStatus.CONVERTED and receipt.converted_order_id:
-            comm.converted_order_id = receipt.converted_order_id
+        # 4) If converted, attribute the order. This runs ONLY on a real status
+        #    advance, which itself runs only AFTER the unique-event_id insert
+        #    succeeded above — so a replayed conversion (duplicate event_id) hits
+        #    the IntegrityError no-op path and never re-attributes. No double count.
+        if new_status == CommStatus.CONVERTED:
+            if receipt.converted_order_id:
+                comm.converted_order_id = receipt.converted_order_id
+            if receipt.order_amount is not None:
+                comm.attributed_amount = receipt.order_amount
         session.add(comm)
         session.commit()
         session.refresh(comm)
