@@ -17,6 +17,19 @@ const COLORS: Record<string, string> = {
   FAILED: "bg-rose-100 text-rose-700",
 };
 
+const DOT: Record<string, string> = {
+  DRAFT: "bg-slate-400",
+  SENDING: "bg-blue-500",
+  SENT: "bg-emerald-500",
+  QUEUED: "bg-slate-400",
+  DELIVERED: "bg-sky-500",
+  OPENED: "bg-indigo-500",
+  READ: "bg-violet-500",
+  CLICKED: "bg-amber-500",
+  CONVERTED: "bg-emerald-500",
+  FAILED: "bg-rose-500",
+};
+
 export default function StatusBadge({
   status,
 }: {
@@ -24,10 +37,11 @@ export default function StatusBadge({
 }) {
   return (
     <span
-      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
         COLORS[status] ?? "bg-slate-100 text-slate-600"
       }`}
     >
+      <span className={`h-1.5 w-1.5 rounded-full ${DOT[status] ?? "bg-slate-400"}`} />
       {status}
     </span>
   );

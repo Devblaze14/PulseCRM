@@ -14,44 +14,49 @@ export default function AudiencePreview({
   return (
     <div>
       {rationale && (
-        <p className="mb-3 rounded-lg bg-brand-50 px-3 py-2 text-xs italic text-brand-700">
-          <span className="font-semibold not-italic">Why this segment: </span>
-          {rationale}
-        </p>
+        <div className="mb-4 flex items-start gap-2 rounded-2xl border border-brand-100 bg-brand-50 px-3.5 py-2.5 text-xs leading-relaxed text-brand-800">
+          <span className="mt-px">✨</span>
+          <p>
+            <span className="font-semibold">Why this segment: </span>
+            {rationale}
+          </p>
+        </div>
       )}
 
-      <div className="mb-3 flex items-baseline gap-2">
-        <span className="text-2xl font-semibold text-brand-600">
+      <div className="mb-4 flex items-baseline gap-2">
+        <span className="text-3xl font-semibold tracking-tight text-slate-900">
           {preview.count.toLocaleString("en-IN")}
         </span>
-        <span className="text-sm text-slate-500">customers match</span>
+        <span className="text-sm text-slate-400">customers match</span>
       </div>
 
       {preview.sample.length > 0 && (
-        <div className="overflow-hidden rounded-lg border border-slate-200">
+        <div className="overflow-hidden rounded-2xl border border-slate-200/70">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 text-slate-500">
+            <thead className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-400">
               <tr>
-                <th className="px-3 py-2 font-medium">Name</th>
-                <th className="px-3 py-2 font-medium">City</th>
-                <th className="px-3 py-2 font-medium">Spend</th>
-                <th className="px-3 py-2 font-medium">Last order</th>
+                <th className="px-3 py-2.5 font-medium">Name</th>
+                <th className="px-3 py-2.5 font-medium">City</th>
+                <th className="px-3 py-2.5 text-right font-medium">Spend</th>
+                <th className="px-3 py-2.5 text-right font-medium">Last order</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-50">
               {preview.sample.map((c) => (
                 <tr key={c.id} className="text-slate-600">
-                  <td className="px-3 py-2 font-medium text-slate-800">
+                  <td className="px-3 py-2.5 font-medium text-slate-800">
                     {c.name}
                   </td>
-                  <td className="px-3 py-2">{c.city}</td>
-                  <td className="px-3 py-2">{inr(c.total_spend)}</td>
-                  <td className="px-3 py-2">{relativeDays(c.last_order_at)}</td>
+                  <td className="px-3 py-2.5">{c.city}</td>
+                  <td className="px-3 py-2.5 text-right">{inr(c.total_spend)}</td>
+                  <td className="px-3 py-2.5 text-right text-slate-400">
+                    {relativeDays(c.last_order_at)}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <p className="bg-slate-50 px-3 py-1.5 text-[11px] text-slate-400">
+          <p className="bg-slate-50 px-3 py-2 text-[11px] text-slate-400">
             Showing up to 10 of {preview.count.toLocaleString("en-IN")}.
           </p>
         </div>

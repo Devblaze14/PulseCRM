@@ -63,35 +63,39 @@ export default function CampaignDetail() {
 
   return (
     <>
-      <TopBar title={campaign?.name ?? "Campaign"} />
-      <div className="space-y-6 p-8">
-        <Link to="/campaigns" className="text-sm text-brand-600 hover:underline">
+      <TopBar title={campaign?.name ?? "Campaign"} subtitle={campaign?.goal} />
+      <div className="space-y-6 px-8 pb-8 pt-2">
+        <Link
+          to="/campaigns"
+          className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition hover:text-slate-800"
+        >
           ← All campaigns
         </Link>
 
         {error && (
-          <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
+          <div className="rounded-2xl border border-rose-100 bg-rose-50 p-3 text-sm text-rose-700">
             {error}
           </div>
         )}
 
         {campaign && (
-          <div className="flex items-center gap-3 text-sm text-slate-600">
+          <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
             <StatusBadge status={campaign.status} />
-            <span>{campaign.channel}</span>
-            <span className="text-slate-300">•</span>
-            <span className="italic">“{campaign.goal}”</span>
+            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+              {campaign.channel}
+            </span>
           </div>
         )}
 
         {/* AI insight */}
         {stats?.ai_summary && (
-          <Card className="border-brand-100 bg-brand-50">
-            <p className="text-sm text-brand-800">
-              <span className="font-semibold">✨ AI insight: </span>
+          <div className="flex items-start gap-3 rounded-3xl border border-brand-100 bg-gradient-to-br from-brand-50 to-white p-5">
+            <span className="text-lg">✨</span>
+            <p className="text-sm leading-relaxed text-brand-900">
+              <span className="font-semibold">AI insight — </span>
               {stats.ai_summary}
             </p>
-          </Card>
+          </div>
         )}
 
         {/* Stat tiles */}
@@ -128,13 +132,43 @@ export default function CampaignDetail() {
         </div>
 
         <Card title="Engagement funnel">
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={funnel}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-              <XAxis dataKey="stage" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-              <Tooltip />
-              <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} />
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={funnel} barCategoryGap="28%">
+              <defs>
+                <linearGradient id="detailBar" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#818cf8" />
+                  <stop offset="100%" stopColor="#6366f1" />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} stroke="#f1f5f9" />
+              <XAxis
+                dataKey="stage"
+                tick={{ fontSize: 12, fill: "#94a3b8" }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis
+                tick={{ fontSize: 12, fill: "#cbd5e1" }}
+                allowDecimals={false}
+                axisLine={false}
+                tickLine={false}
+                width={32}
+              />
+              <Tooltip
+                cursor={{ fill: "#f8fafc" }}
+                contentStyle={{
+                  borderRadius: 12,
+                  border: "1px solid #e2e8f0",
+                  boxShadow: "0 8px 24px -10px rgba(16,24,40,0.18)",
+                  fontSize: 12,
+                }}
+              />
+              <Bar
+                dataKey="value"
+                fill="url(#detailBar)"
+                radius={[8, 8, 8, 8]}
+                maxBarSize={56}
+              />
             </BarChart>
           </ResponsiveContainer>
         </Card>
@@ -143,23 +177,27 @@ export default function CampaignDetail() {
         <Card title={`Communications (${comms.length})`}>
           <div className="max-h-96 overflow-y-auto">
             <table className="w-full text-left text-sm">
-              <thead className="sticky top-0 bg-white text-xs text-slate-400">
-                <tr>
-                  <th className="pb-2 font-medium">Customer</th>
-                  <th className="pb-2 font-medium">Message</th>
-                  <th className="pb-2 font-medium">Status</th>
+              <thead className="sticky top-0 z-10 bg-white text-xs uppercase tracking-wide text-slate-400">
+                <tr className="border-b border-slate-100">
+                  <th className="pb-3 font-medium">Customer</th>
+                  <th className="pb-3 font-medium">Message</th>
+                  <th className="pb-3 text-right font-medium">Revenue</th>
+                  <th className="pb-3 text-right font-medium">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-50">
                 {comms.map((m) => (
-                  <tr key={m.id}>
-                    <td className="py-2.5 font-medium text-slate-700">
+                  <tr key={m.id} className="transition hover:bg-slate-50/60">
+                    <td className="py-3 font-medium text-slate-700">
                       {m.customer_name ?? `#${m.customer_id}`}
                     </td>
-                    <td className="max-w-md truncate py-2.5 text-slate-500">
+                    <td className="max-w-md truncate py-3 text-slate-500">
                       {m.rendered_message}
                     </td>
-                    <td className="py-2.5">
+                    <td className="py-3 text-right font-medium text-emerald-600">
+                      {m.attributed_amount ? inr(m.attributed_amount) : "—"}
+                    </td>
+                    <td className="py-3 text-right">
                       <StatusBadge status={m.status} />
                     </td>
                   </tr>

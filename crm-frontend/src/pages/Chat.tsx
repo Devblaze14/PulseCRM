@@ -114,11 +114,14 @@ export default function Chat() {
 
   return (
     <>
-      <TopBar title="Campaign Builder" />
-      <div className="grid grid-cols-1 gap-6 p-8 lg:grid-cols-2">
+      <TopBar
+        title="Campaign Builder"
+        subtitle="Describe your audience in plain English — AI does the rest"
+      />
+      <div className="grid grid-cols-1 gap-6 px-8 pb-8 pt-2 lg:grid-cols-2">
         {/* Left: chat thread */}
-        <Card title="Chat" className="flex h-[70vh] flex-col">
-          <div className="flex-1 space-y-3 overflow-y-auto pr-1">
+        <Card title="Chat" className="flex h-[72vh] flex-col">
+          <div className="-mr-2 flex-1 space-y-3 overflow-y-auto pr-2">
             {turns.map((t, i) => (
               <MessageBubble key={i} who={t.who}>
                 {t.text}
@@ -130,9 +133,9 @@ export default function Chat() {
               </MessageBubble>
             )}
           </div>
-          <div className="mt-4 flex gap-2">
+          <div className="mt-4 flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50/70 p-1.5 pl-4 focus-within:border-brand-400 focus-within:bg-white">
             <input
-              className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500"
+              className="flex-1 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
               placeholder="Describe your audience and offer…"
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -141,7 +144,7 @@ export default function Chat() {
             <button
               onClick={handleSend}
               disabled={loading}
-              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-50"
+              className="rounded-full bg-slate-900 px-5 py-2 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-50"
             >
               Send
             </button>
@@ -164,11 +167,11 @@ export default function Chat() {
             <Card title="Campaign details">
               <div className="space-y-4">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-500">
+                  <label className="mb-1.5 block text-xs font-medium text-slate-500">
                     Campaign name
                   </label>
                   <input
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-brand-400 focus:bg-white"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Win-back — lapsed 30d"
@@ -176,18 +179,18 @@ export default function Chat() {
                 </div>
 
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-500">
+                  <label className="mb-1.5 block text-xs font-medium text-slate-500">
                     Channel
                   </label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     {CHANNELS.map((ch) => (
                       <button
                         key={ch}
                         onClick={() => redraft(ch)}
-                        className={`rounded-lg border px-3 py-1.5 text-xs font-medium ${
+                        className={`rounded-full border px-4 py-1.5 text-xs font-medium transition ${
                           channel === ch
-                            ? "border-brand-500 bg-brand-50 text-brand-700"
-                            : "border-slate-300 text-slate-600 hover:bg-slate-50"
+                            ? "border-slate-900 bg-slate-900 text-white"
+                            : "border-slate-200 text-slate-600 hover:bg-slate-50"
                         }`}
                       >
                         {ch}
@@ -198,7 +201,7 @@ export default function Chat() {
 
                 {variants.length > 1 && (
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-500">
+                    <label className="mb-1.5 block text-xs font-medium text-slate-500">
                       AI suggestions — pick one to edit
                     </label>
                     <div className="space-y-2">
@@ -209,9 +212,9 @@ export default function Chat() {
                             key={i}
                             type="button"
                             onClick={() => setMessage(v)}
-                            className={`block w-full rounded-lg border px-3 py-2 text-left text-sm ${
+                            className={`block w-full rounded-2xl border px-4 py-2.5 text-left text-sm transition ${
                               selected
-                                ? "border-brand-500 bg-brand-50 text-brand-900"
+                                ? "border-brand-400 bg-brand-50 text-brand-900 ring-1 ring-brand-200"
                                 : "border-slate-200 text-slate-600 hover:bg-slate-50"
                             }`}
                           >
@@ -224,12 +227,12 @@ export default function Chat() {
                 )}
 
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-slate-500">
+                  <label className="mb-1.5 block text-xs font-medium text-slate-500">
                     Message (use {"{name}"} for personalisation)
                   </label>
                   <textarea
                     rows={4}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-brand-500"
+                    className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-brand-400 focus:bg-white"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                   />
@@ -238,7 +241,7 @@ export default function Chat() {
                 <button
                   onClick={launch}
                   disabled={launching || !name.trim() || !message}
-                  className="w-full rounded-lg bg-brand-600 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50"
+                  className="w-full rounded-full bg-slate-900 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-50"
                 >
                   {launching
                     ? "Launching…"

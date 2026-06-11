@@ -32,61 +32,78 @@ export default function Customers() {
 
   return (
     <>
-      <TopBar title="Customers" />
-      <div className="p-8">
+      <TopBar
+        title="Customers"
+        subtitle="Your full audience with derived spend and recency"
+      />
+      <div className="px-8 pb-8 pt-2">
         {error && (
-          <div className="mb-4 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
+          <div className="mb-4 rounded-2xl border border-rose-100 bg-rose-50 p-3 text-sm text-rose-700">
             {error}
           </div>
         )}
         <Card
           title={`${filtered.length.toLocaleString("en-IN")} customers`}
           action={
-            <input
-              className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm outline-none focus:border-brand-500"
-              placeholder="Search name, email, city…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+            <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50/70 px-3.5 py-2 focus-within:border-brand-400 focus-within:bg-white">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.8}
+                className="h-4 w-4 text-slate-400"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m20 20-3-3" strokeLinecap="round" />
+              </svg>
+              <input
+                className="w-48 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
+                placeholder="Search name, email, city…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
           }
         >
-          <div className="max-h-[70vh] overflow-y-auto">
+          <div className="max-h-[68vh] overflow-y-auto">
             <table className="w-full text-left text-sm">
-              <thead className="sticky top-0 bg-white text-xs text-slate-400">
-                <tr>
-                  <th className="pb-2 font-medium">Name</th>
-                  <th className="pb-2 font-medium">City</th>
-                  <th className="pb-2 font-medium">Tags</th>
-                  <th className="pb-2 font-medium">Total spend</th>
-                  <th className="pb-2 font-medium">Orders</th>
-                  <th className="pb-2 font-medium">Last order</th>
+              <thead className="sticky top-0 z-10 bg-white text-xs uppercase tracking-wide text-slate-400">
+                <tr className="border-b border-slate-100">
+                  <th className="pb-3 font-medium">Name</th>
+                  <th className="pb-3 font-medium">City</th>
+                  <th className="pb-3 font-medium">Tags</th>
+                  <th className="pb-3 text-right font-medium">Total spend</th>
+                  <th className="pb-3 text-right font-medium">Orders</th>
+                  <th className="pb-3 text-right font-medium">Last order</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-50">
                 {filtered.map((c) => (
-                  <tr key={c.id} className="hover:bg-slate-50">
-                    <td className="py-2.5">
+                  <tr key={c.id} className="transition hover:bg-slate-50/60">
+                    <td className="py-3">
                       <div className="font-medium text-slate-800">{c.name}</div>
                       <div className="text-xs text-slate-400">{c.email}</div>
                     </td>
-                    <td className="py-2.5 text-slate-600">{c.city}</td>
-                    <td className="py-2.5">
+                    <td className="py-3 text-slate-600">{c.city}</td>
+                    <td className="py-3">
                       <div className="flex flex-wrap gap-1">
                         {c.tags.map((t) => (
                           <span
                             key={t}
-                            className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-500"
+                            className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500"
                           >
                             {t}
                           </span>
                         ))}
                       </div>
                     </td>
-                    <td className="py-2.5 font-medium text-slate-700">
+                    <td className="py-3 text-right font-medium text-slate-800">
                       {inr(c.total_spend)}
                     </td>
-                    <td className="py-2.5 text-slate-600">{c.order_count}</td>
-                    <td className="py-2.5 text-slate-500">
+                    <td className="py-3 text-right text-slate-600">
+                      {c.order_count}
+                    </td>
+                    <td className="py-3 text-right text-slate-400">
                       {relativeDays(c.last_order_at)}
                     </td>
                   </tr>

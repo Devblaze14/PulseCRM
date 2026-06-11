@@ -1,21 +1,76 @@
 import { NavLink } from "react-router-dom";
+import type { ReactNode } from "react";
 
-// Left navigation. NavLink gives us active-route styling for free.
+// Minimal inline icons (no extra dependency) — stroke style matches the
+// clean, light dashboard references.
+function Icon({ path }: { path: ReactNode }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.7}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-[18px] w-[18px]"
+    >
+      {path}
+    </svg>
+  );
+}
+
+const ICONS: Record<string, ReactNode> = {
+  dashboard: (
+    <>
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    </>
+  ),
+  builder: (
+    <>
+      <path d="M5 3v4M3 5h4M6 17v4M4 19h4" />
+      <path d="M13 4l2.5 6L22 12l-6.5 2L13 20l-2.5-6L4 12l6.5-2z" />
+    </>
+  ),
+  campaigns: (
+    <>
+      <path d="M3 11l18-5v12L3 14v-3z" />
+      <path d="M11.6 16.8a3 3 0 0 1-5.8-1.6" />
+    </>
+  ),
+  customers: (
+    <>
+      <circle cx="9" cy="8" r="3" />
+      <path d="M3 20a6 6 0 0 1 12 0" />
+      <path d="M16 5.5a3 3 0 0 1 0 5M18 20a6 6 0 0 0-3-5.2" />
+    </>
+  ),
+};
+
 const NAV = [
-  { to: "/", label: "Dashboard", icon: "📊", end: true },
-  { to: "/chat", label: "Campaign Builder", icon: "✨" },
-  { to: "/campaigns", label: "Campaigns", icon: "📣" },
-  { to: "/customers", label: "Customers", icon: "👥" },
+  { to: "/", label: "Dashboard", icon: "dashboard", end: true },
+  { to: "/chat", label: "Campaign Builder", icon: "builder" },
+  { to: "/campaigns", label: "Campaigns", icon: "campaigns" },
+  { to: "/customers", label: "Customers", icon: "customers" },
 ];
 
 export default function Sidebar() {
   return (
-    <aside className="w-60 shrink-0 border-r border-slate-200 bg-white px-4 py-6">
-      <div className="mb-8 flex items-center gap-2 px-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
-          ⚡
+    <aside className="flex w-60 shrink-0 flex-col rounded-4xl border border-black/5 bg-white px-3 py-5 shadow-card">
+      <div className="mb-7 flex items-center gap-2.5 px-3">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm">
+          <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
+            <path
+              d="M13 2L4.5 13.5H11L9.5 22 19.5 9.5H13L13 2z"
+              fill="currentColor"
+            />
+          </svg>
         </div>
-        <span className="text-lg font-semibold text-slate-900">PulseCRM</span>
+        <span className="text-[17px] font-semibold tracking-tight text-slate-900">
+          PulseCRM
+        </span>
       </div>
 
       <nav className="space-y-1">
@@ -25,22 +80,22 @@ export default function Sidebar() {
             to={item.to}
             end={item.end}
             className={({ isActive }) =>
-              `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
+              `flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition ${
                 isActive
-                  ? "bg-brand-50 text-brand-700"
-                  : "text-slate-600 hover:bg-slate-100"
+                  ? "bg-slate-900 text-white shadow-sm"
+                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
               }`
             }
           >
-            <span>{item.icon}</span>
+            <Icon path={ICONS[item.icon]} />
             {item.label}
           </NavLink>
         ))}
       </nav>
 
-      <div className="mt-10 rounded-lg bg-slate-50 p-3 text-xs text-slate-500">
-        AI-native marketing CRM. Type intent in plain English → preview audience →
-        draft → launch.
+      <div className="mt-auto rounded-3xl bg-gradient-to-br from-brand-50 to-slate-50 p-4 text-xs leading-relaxed text-slate-500">
+        <p className="mb-1 font-semibold text-slate-700">✨ AI-native CRM</p>
+        Describe your audience in plain English → preview → draft → launch.
       </div>
     </aside>
   );

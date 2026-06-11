@@ -45,10 +45,13 @@ export default function Dashboard() {
 
   return (
     <>
-      <TopBar title="Dashboard" />
-      <div className="space-y-6 p-8">
+      <TopBar
+        title="Dashboard"
+        subtitle="Your campaigns, audience and revenue at a glance"
+      />
+      <div className="space-y-6 px-8 pb-8 pt-2">
         {error && (
-          <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">
+          <div className="rounded-2xl border border-rose-100 bg-rose-50 p-3 text-sm text-rose-700">
             Couldn’t load data: {error}. Is the API running (with VPN on)?
           </div>
         )}
@@ -57,7 +60,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
           <StatTile
             label="Messages sent"
-            value={overview?.sent ?? "—"}
+            value={overview ? overview.sent.toLocaleString("en-IN") : "—"}
             accent="slate"
           />
           <StatTile
@@ -83,64 +86,98 @@ export default function Dashboard() {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
           {/* Funnel chart */}
-          <Card title="Overall engagement funnel">
+          <Card title="Overall engagement funnel" className="lg:col-span-3">
             {funnel.length > 0 ? (
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={funnel}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="stage" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#6366f1" radius={[4, 4, 0, 0]} />
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={funnel} barCategoryGap="28%">
+                  <defs>
+                    <linearGradient id="funnelBar" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#818cf8" />
+                      <stop offset="100%" stopColor="#6366f1" />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    vertical={false}
+                    stroke="#f1f5f9"
+                    strokeDasharray="0"
+                  />
+                  <XAxis
+                    dataKey="stage"
+                    tick={{ fontSize: 12, fill: "#94a3b8" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12, fill: "#cbd5e1" }}
+                    allowDecimals={false}
+                    axisLine={false}
+                    tickLine={false}
+                    width={32}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "#f8fafc" }}
+                    contentStyle={{
+                      borderRadius: 12,
+                      border: "1px solid #e2e8f0",
+                      boxShadow: "0 8px 24px -10px rgba(16,24,40,0.18)",
+                      fontSize: 12,
+                    }}
+                  />
+                  <Bar
+                    dataKey="value"
+                    fill="url(#funnelBar)"
+                    radius={[8, 8, 8, 8]}
+                    maxBarSize={56}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <p className="py-12 text-center text-sm text-slate-400">
+              <p className="py-16 text-center text-sm text-slate-400">
                 No campaign activity yet. Build one in the Campaign Builder.
               </p>
             )}
           </Card>
 
           {/* Recent campaigns */}
-          <Card title="Recent campaigns">
+          <Card
+            title="Recent campaigns"
+            className="lg:col-span-2"
+            action={
+              <Link
+                to="/campaigns"
+                className="text-xs font-medium text-brand-600 hover:underline"
+              >
+                View all
+              </Link>
+            }
+          >
             {campaigns.length === 0 ? (
-              <p className="py-12 text-center text-sm text-slate-400">
+              <p className="py-16 text-center text-sm text-slate-400">
                 No campaigns yet.
               </p>
             ) : (
-              <table className="w-full text-left text-sm">
-                <thead className="text-xs text-slate-400">
-                  <tr>
-                    <th className="pb-2 font-medium">Name</th>
-                    <th className="pb-2 font-medium">Channel</th>
-                    <th className="pb-2 font-medium">Status</th>
-                    <th className="pb-2 font-medium">Created</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {campaigns.slice(0, 6).map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-50">
-                      <td className="py-2.5">
-                        <Link
-                          to={`/campaigns/${c.id}`}
-                          className="font-medium text-brand-600 hover:underline"
-                        >
+              <ul className="-mt-1 divide-y divide-slate-100">
+                {campaigns.slice(0, 6).map((c) => (
+                  <li key={c.id}>
+                    <Link
+                      to={`/campaigns/${c.id}`}
+                      className="-mx-2 flex items-center justify-between gap-3 rounded-2xl px-2 py-3 transition hover:bg-slate-50"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-slate-800">
                           {c.name}
-                        </Link>
-                      </td>
-                      <td className="py-2.5 text-slate-600">{c.channel}</td>
-                      <td className="py-2.5">
-                        <StatusBadge status={c.status} />
-                      </td>
-                      <td className="py-2.5 text-slate-500">
-                        {shortDate(c.created_at)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {c.channel} · {shortDate(c.created_at)}
+                        </p>
+                      </div>
+                      <StatusBadge status={c.status} />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             )}
           </Card>
         </div>
