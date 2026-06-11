@@ -89,9 +89,20 @@ This is the heart of the system. When you launch a campaign:
 **4. Live reporting**
 - The campaign page polls for stats; the funnel chart fills in live, with a plain-English AI insight on top.
 
-The flow is tested end-to-end against a real database, including the awkward cases:
-- 77 updates received → 77 counted, no duplicates, even under retries.
-- Scrambled, out-of-order updates → status never moved backward.
+The flow has been exercised end-to-end locally — seed → AI-proposed segment →
+launch → the channel's (out-of-order, retried) callbacks → live stats — and the
+awkward cases are covered by an automated test suite (`crm-backend/api/tests/`,
+pytest on in-memory SQLite). The suite pins the engine-portable invariants:
+- a replayed conversion (same event id) is counted once — no double revenue;
+- a higher-rank status arriving before a lower one never rolls status backward;
+- per-message `attributed_amount` sums correctly into a campaign's `attributed_revenue`;
+- a segment proposal missing its AI rationale still previews fine (no 500);
+- the validator still rejects an unknown filter field — the AI→DB gate holds.
+
+Run them with `pytest` from `crm-backend/api`. The tests deliberately stay on
+portable logic (status machine, idempotency dedup, revenue aggregation, the
+validator); anything that only holds on Postgres (JSON operators) is left to the
+live database rather than approximated on SQLite.
 
 ## Safety: the AI can't touch the database directly
 
