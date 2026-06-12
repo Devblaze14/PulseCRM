@@ -1,18 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import TopBar from "../components/TopBar";
 import Card from "../components/Card";
 import StatTile from "../components/StatTile";
 import StatusBadge from "../components/StatusBadge";
+import FunnelChart from "../components/FunnelChart";
 import { campaigns as campaignsApi } from "../api";
 import type { Campaign, CampaignStats, Communication } from "../lib/types";
 import { inr, pct } from "../lib/format";
@@ -67,21 +59,21 @@ export default function CampaignDetail() {
       <div className="space-y-6 px-8 pb-8 pt-2">
         <Link
           to="/campaigns"
-          className="inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition hover:text-slate-800"
+          className="inline-flex items-center gap-1 text-sm font-medium text-ink-muted transition hover:text-ink"
         >
           ← All campaigns
         </Link>
 
         {error && (
-          <div className="rounded-2xl border border-rose-100 bg-rose-50 p-3 text-sm text-rose-700">
+          <div className="rounded-2xl border border-rose-100 bg-rose-50 p-3 text-sm text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300">
             {error}
           </div>
         )}
 
         {campaign && (
-          <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500">
+          <div className="flex flex-wrap items-center gap-3 text-sm text-ink-muted">
             <StatusBadge status={campaign.status} />
-            <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+            <span className="rounded-full border border-hairline bg-surface-2 px-2.5 py-1 text-xs font-medium text-ink-soft">
               {campaign.channel}
             </span>
           </div>
@@ -89,9 +81,9 @@ export default function CampaignDetail() {
 
         {/* AI insight */}
         {stats?.ai_summary && (
-          <div className="flex items-start gap-3 rounded-3xl border border-brand-100 bg-gradient-to-br from-brand-50 to-white p-5">
+          <div className="glow-hero flex items-start gap-3 rounded-3xl border border-brand-100 bg-brand-50 p-5 dark:border-brand-500/20 dark:bg-brand-500/10 dark:shadow-glow">
             <span className="text-lg">✨</span>
-            <p className="text-sm leading-relaxed text-brand-900">
+            <p className="text-sm leading-relaxed text-brand-900 dark:text-brand-100">
               <span className="font-semibold">AI insight — </span>
               {stats.ai_summary}
             </p>
@@ -131,70 +123,32 @@ export default function CampaignDetail() {
           />
         </div>
 
-        <Card title="Engagement funnel">
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={funnel} barCategoryGap="28%">
-              <defs>
-                <linearGradient id="detailBar" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#818cf8" />
-                  <stop offset="100%" stopColor="#6366f1" />
-                </linearGradient>
-              </defs>
-              <CartesianGrid vertical={false} stroke="#f1f5f9" />
-              <XAxis
-                dataKey="stage"
-                tick={{ fontSize: 12, fill: "#94a3b8" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 12, fill: "#cbd5e1" }}
-                allowDecimals={false}
-                axisLine={false}
-                tickLine={false}
-                width={32}
-              />
-              <Tooltip
-                cursor={{ fill: "#f8fafc" }}
-                contentStyle={{
-                  borderRadius: 12,
-                  border: "1px solid #e2e8f0",
-                  boxShadow: "0 8px 24px -10px rgba(16,24,40,0.18)",
-                  fontSize: 12,
-                }}
-              />
-              <Bar
-                dataKey="value"
-                fill="url(#detailBar)"
-                radius={[8, 8, 8, 8]}
-                maxBarSize={56}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+        <Card title="Engagement funnel" glow>
+          <FunnelChart data={funnel} gradientId="detailBar" />
         </Card>
 
         {/* Communications table */}
         <Card title={`Communications (${comms.length})`}>
           <div className="max-h-96 overflow-y-auto">
             <table className="w-full text-left text-sm">
-              <thead className="sticky top-0 z-10 bg-white text-xs uppercase tracking-wide text-slate-400">
-                <tr className="border-b border-slate-100">
+              <thead className="sticky top-0 z-10 bg-surface text-xs uppercase tracking-wide text-ink-muted">
+                <tr className="border-b border-hairline">
                   <th className="pb-3 font-medium">Customer</th>
                   <th className="pb-3 font-medium">Message</th>
                   <th className="pb-3 text-right font-medium">Revenue</th>
                   <th className="pb-3 text-right font-medium">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody className="divide-y divide-hairline">
                 {comms.map((m) => (
-                  <tr key={m.id} className="transition hover:bg-slate-50/60">
-                    <td className="py-3 font-medium text-slate-700">
+                  <tr key={m.id} className="transition hover:bg-surface-2">
+                    <td className="py-3 font-medium text-ink">
                       {m.customer_name ?? `#${m.customer_id}`}
                     </td>
-                    <td className="max-w-md truncate py-3 text-slate-500">
+                    <td className="max-w-md truncate py-3 text-ink-soft">
                       {m.rendered_message}
                     </td>
-                    <td className="py-3 text-right font-medium text-emerald-600">
+                    <td className="tnum py-3 text-right font-medium text-emerald-600 dark:text-emerald-400">
                       {m.attributed_amount ? inr(m.attributed_amount) : "—"}
                     </td>
                     <td className="py-3 text-right">

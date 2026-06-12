@@ -58,9 +58,9 @@ const NAV = [
 
 export default function Sidebar() {
   return (
-    <aside className="flex w-60 shrink-0 flex-col rounded-4xl border border-black/5 bg-white px-3 py-5 shadow-card">
-      <div className="mb-7 flex items-center gap-2.5 px-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm">
+    <aside className="flex w-60 shrink-0 flex-col rounded-4xl border border-hairline bg-surface px-3 py-5 shadow-card">
+      <div className="mb-8 flex items-center gap-2.5 px-3">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-brand-glow">
           <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
             <path
               d="M13 2L4.5 13.5H11L9.5 22 19.5 9.5H13L13 2z"
@@ -68,11 +68,14 @@ export default function Sidebar() {
             />
           </svg>
         </div>
-        <span className="text-[17px] font-semibold tracking-tight text-slate-900">
+        <span className="text-[17px] font-semibold tracking-tight text-ink">
           PulseCRM
         </span>
       </div>
 
+      <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
+        Menu
+      </p>
       <nav className="space-y-1">
         {NAV.map((item) => (
           <NavLink
@@ -80,10 +83,10 @@ export default function Sidebar() {
             to={item.to}
             end={item.end}
             className={({ isActive }) =>
-              `flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition ${
+              `flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition duration-200 ${
                 isActive
-                  ? "bg-slate-900 text-white shadow-sm"
-                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                  ? "bg-gradient-to-r from-brand-600 to-brand-500 text-white shadow-brand-glow"
+                  : "text-ink-soft hover:bg-surface-2 hover:text-ink"
               }`
             }
           >
@@ -93,8 +96,10 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="mt-auto rounded-3xl bg-gradient-to-br from-brand-50 to-slate-50 p-4 text-xs leading-relaxed text-slate-500">
-        <p className="mb-1 font-semibold text-slate-700">✨ AI-native CRM</p>
+      <div className="glow-hero mt-auto overflow-hidden rounded-3xl border border-brand-100 bg-brand-50 p-4 text-xs leading-relaxed text-ink-soft dark:border-brand-500/20 dark:bg-brand-500/10 dark:shadow-glow">
+        <p className="mb-1 font-semibold text-brand-700 dark:text-brand-200">
+          ✨ AI-native CRM
+        </p>
         Describe your audience in plain English → preview → draft → launch.
       </div>
     </aside>

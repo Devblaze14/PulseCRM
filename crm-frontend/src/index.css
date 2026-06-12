@@ -2,31 +2,119 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Light, neutral canvas for the dashboard. */
+/* Surface palette as CSS variables. Toggling `.dark` on <html> repaints the
+   whole app — Tailwind's canvas / surface / ink / accent tokens read these. */
+:root {
+  /* Light: warm premium off-white with crisp white cards. */
+  --canvas: 243 242 247; /* warm off-white */
+  --surface: 255 255 255; /* card / panel */
+  --surface-2: 247 247 251; /* subtle recessed */
+  --hairline: 230 230 238; /* soft border */
+  --ink: 17 21 33; /* near-black slate */
+  --ink-soft: 82 90 110; /* secondary text */
+  --ink-muted: 148 155 173; /* tertiary text */
+  --ring: 96 141 250; /* brand-400 focus ring */
+
+  /* Soft pastel bento accents (tile backgrounds) + paired ink for text on them. */
+  --accent-lilac: 237 233 254; /* violet-100-ish */
+  --accent-lilac-ink: 109 78 222;
+  --accent-mint: 219 245 233; /* emerald wash */
+  --accent-mint-ink: 12 130 97;
+  --accent-blush: 252 230 240; /* pink wash */
+  --accent-blush-ink: 197 53 117;
+  --accent-butter: 252 245 215; /* warm yellow wash */
+  --accent-butter-ink: 161 122 13;
+  --accent-sky: 224 238 255; /* light blue wash */
+  --accent-sky-ink: 30 90 200;
+}
+.dark {
+  /* Dark: deep navy-black with a blue undertone (NeuroBank / Finstack). */
+  --canvas: 6 7 13; /* #06070d near-black navy */
+  --surface: 15 19 32; /* #0f1320 raised card */
+  --surface-2: 22 27 43; /* recessed / inputs */
+  --hairline: 34 41 61; /* subtle blue-tinted border */
+  --ink: 237 241 250; /* bright slate-100 */
+  --ink-soft: 167 177 198;
+  --ink-muted: 114 124 146;
+  --ring: 96 141 250; /* brand-400 focus ring */
+
+  /* Pastel accents go translucent/desaturated so they read on the navy. */
+  --accent-lilac: 41 36 72;
+  --accent-lilac-ink: 184 168 255;
+  --accent-mint: 18 46 42;
+  --accent-mint-ink: 94 224 184;
+  --accent-blush: 56 30 47;
+  --accent-blush-ink: 246 158 200;
+  --accent-butter: 51 44 22;
+  --accent-butter-ink: 240 213 121;
+  --accent-sky: 23 41 70;
+  --accent-sky-ink: 132 184 255;
+}
+
 html,
 body,
 #root {
   height: 100%;
 }
 body {
-  @apply bg-canvas text-slate-800 antialiased;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  @apply bg-canvas font-sans text-ink antialiased;
   letter-spacing: -0.011em;
+}
+
+/* Big metric numbers should line up like the references. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Blue ambient glow behind dark-theme hero cards. Neutral (invisible) in light
+   mode — only the `.dark` variant paints the radial wash. Apply `.glow-hero`
+   to a relatively-positioned card. */
+.glow-hero {
+  position: relative;
+}
+.dark .glow-hero::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: radial-gradient(
+    120% 80% at 50% 0%,
+    rgba(59, 110, 246, 0.16),
+    rgba(59, 110, 246, 0) 60%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+.glow-hero > * {
+  position: relative;
+  z-index: 1;
 }
 
 /* Subtle, rounded scrollbars so overflow areas match the soft aesthetic. */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #d4d4d8 transparent;
+  scrollbar-color: rgb(var(--hairline)) transparent;
 }
 *::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 *::-webkit-scrollbar-thumb {
-  background: #d4d4d8;
+  background: rgb(var(--hairline));
   border-radius: 9999px;
 }
-*::-webkit-scrollbar-thumb:hover {
-  background: #b8b8be;
+
+/* Brand-tinted text selection for a premium touch. */
+::selection {
+  background: rgb(var(--ring) / 0.22);
+}
+
+/* Inline keyword highlight used in headings (Xeno "Together" / "Talent Community"
+   style): a soft blue pill behind a word. */
+.kw {
+  @apply rounded-md bg-brand-100 px-1.5 py-0.5 text-brand-700;
+}
+.dark .kw {
+  @apply bg-brand-500/20 text-brand-200;
 }

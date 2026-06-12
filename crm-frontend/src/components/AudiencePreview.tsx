@@ -14,7 +14,7 @@ export default function AudiencePreview({
   return (
     <div>
       {rationale && (
-        <div className="mb-4 flex items-start gap-2 rounded-2xl border border-brand-100 bg-brand-50 px-3.5 py-2.5 text-xs leading-relaxed text-brand-800">
+        <div className="glow-hero mb-4 flex items-start gap-2 rounded-2xl border border-brand-100 bg-brand-50 px-3.5 py-2.5 text-xs leading-relaxed text-brand-800 dark:border-brand-500/20 dark:bg-brand-500/10 dark:text-brand-200">
           <span className="mt-px">✨</span>
           <p>
             <span className="font-semibold">Why this segment: </span>
@@ -24,16 +24,16 @@ export default function AudiencePreview({
       )}
 
       <div className="mb-4 flex items-baseline gap-2">
-        <span className="text-3xl font-semibold tracking-tight text-slate-900">
+        <span className="tnum text-3xl font-semibold tracking-tight text-ink">
           {preview.count.toLocaleString("en-IN")}
         </span>
-        <span className="text-sm text-slate-400">customers match</span>
+        <span className="text-sm text-ink-muted">customers match</span>
       </div>
 
       {preview.sample.length > 0 && (
-        <div className="overflow-hidden rounded-2xl border border-slate-200/70">
+        <div className="overflow-hidden rounded-2xl border border-hairline">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-400">
+            <thead className="bg-surface-2 text-[11px] uppercase tracking-wide text-ink-muted">
               <tr>
                 <th className="px-3 py-2.5 font-medium">Name</th>
                 <th className="px-3 py-2.5 font-medium">City</th>
@@ -41,22 +41,20 @@ export default function AudiencePreview({
                 <th className="px-3 py-2.5 text-right font-medium">Last order</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-50">
+            <tbody className="divide-y divide-hairline text-ink-soft">
               {preview.sample.map((c) => (
-                <tr key={c.id} className="text-slate-600">
-                  <td className="px-3 py-2.5 font-medium text-slate-800">
-                    {c.name}
-                  </td>
+                <tr key={c.id}>
+                  <td className="px-3 py-2.5 font-medium text-ink">{c.name}</td>
                   <td className="px-3 py-2.5">{c.city}</td>
                   <td className="px-3 py-2.5 text-right">{inr(c.total_spend)}</td>
-                  <td className="px-3 py-2.5 text-right text-slate-400">
+                  <td className="px-3 py-2.5 text-right text-ink-muted">
                     {relativeDays(c.last_order_at)}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          <p className="bg-slate-50 px-3 py-2 text-[11px] text-slate-400">
+          <p className="bg-surface-2 px-3 py-2 text-[11px] text-ink-muted">
             Showing up to 10 of {preview.count.toLocaleString("en-IN")}.
           </p>
         </div>

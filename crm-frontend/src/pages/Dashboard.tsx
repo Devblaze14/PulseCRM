@@ -1,18 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import TopBar from "../components/TopBar";
 import Card from "../components/Card";
 import StatTile from "../components/StatTile";
 import StatusBadge from "../components/StatusBadge";
+import FunnelChart from "../components/FunnelChart";
+import DonutChart from "../components/DonutChart";
+import GaugeChart from "../components/GaugeChart";
+import CampaignComparisonChart from "../components/CampaignComparisonChart";
+import type { CampaignMetric } from "../components/CampaignComparisonChart";
 import { campaigns as campaignsApi, stats as statsApi } from "../api";
 import type { Campaign, CampaignStats } from "../lib/types";
 import { inr, pct, shortDate } from "../lib/format";
@@ -20,6 +16,7 @@ import { inr, pct, shortDate } from "../lib/format";
 export default function Dashboard() {
   const [overview, setOverview] = useState<CampaignStats | null>(null);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [comparison, setComparison] = useState<CampaignMetric[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -27,6 +24,26 @@ export default function Dashboard() {
       .then(([o, c]) => {
         setOverview(o);
         setCampaigns(c);
+        // Fetch per-campaign stats for the most recent few (cheap, AI skipped)
+        // to power the comparison chart. Failures degrade to dropping that bar.
+        const recent = c.slice(0, 6);
+        return Promise.all(
+          recent.map((camp) =>
+            campaignsApi
+              .stats(camp.id, false)
+              .then((s) => ({
+                id: camp.id,
+                name: camp.name,
+                conversions: s.converted,
+                revenue: s.attributed_revenue,
+                clickRate: s.click_rate,
+              }))
+              .catch(() => null),
+          ),
+        );
+      })
+      .then((metrics) => {
+        if (metrics) setComparison(metrics.filter(Boolean) as CampaignMetric[]);
       })
       .catch((e) => setError(e.message));
   }, []);
@@ -43,6 +60,20 @@ export default function Dashboard() {
       ]
     : [];
 
+  // Delivery health: delivered vs failed out of everything we sent.
+  const donutData = overview
+    ? [
+        {
+          name: "Delivered",
+          value: overview.delivered,
+          color: "success" as const,
+        },
+        { name: "Failed", value: overview.failed, color: "danger" as const },
+      ].filter((d) => d.value > 0)
+    : [];
+
+  const hasActivity = !!overview && overview.sent > 0;
+
   return (
     <>
       <TopBar
@@ -51,7 +82,7 @@ export default function Dashboard() {
       />
       <div className="space-y-6 px-8 pb-8 pt-2">
         {error && (
-          <div className="rounded-2xl border border-rose-100 bg-rose-50 p-3 text-sm text-rose-700">
+          <div className="rounded-2xl border border-rose-100 bg-rose-50 p-3 text-sm text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300">
             Couldn’t load data: {error}. Is the API running (with VPN on)?
           </div>
         )}
@@ -86,61 +117,71 @@ export default function Dashboard() {
           />
         </div>
 
+        {/* Funnel (wide) + delivery donut + conversion gauge */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-          {/* Funnel chart */}
-          <Card title="Overall engagement funnel" className="lg:col-span-3">
-            {funnel.length > 0 ? (
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={funnel} barCategoryGap="28%">
-                  <defs>
-                    <linearGradient id="funnelBar" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#818cf8" />
-                      <stop offset="100%" stopColor="#6366f1" />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid
-                    vertical={false}
-                    stroke="#f1f5f9"
-                    strokeDasharray="0"
-                  />
-                  <XAxis
-                    dataKey="stage"
-                    tick={{ fontSize: 12, fill: "#94a3b8" }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 12, fill: "#cbd5e1" }}
-                    allowDecimals={false}
-                    axisLine={false}
-                    tickLine={false}
-                    width={32}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "#f8fafc" }}
-                    contentStyle={{
-                      borderRadius: 12,
-                      border: "1px solid #e2e8f0",
-                      boxShadow: "0 8px 24px -10px rgba(16,24,40,0.18)",
-                      fontSize: 12,
-                    }}
-                  />
-                  <Bar
-                    dataKey="value"
-                    fill="url(#funnelBar)"
-                    radius={[8, 8, 8, 8]}
-                    maxBarSize={56}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+          <Card title="Overall engagement funnel" className="lg:col-span-3" glow>
+            {hasActivity ? (
+              <FunnelChart data={funnel} gradientId="funnelBar" />
             ) : (
-              <p className="py-16 text-center text-sm text-slate-400">
+              <p className="py-16 text-center text-sm text-ink-muted">
                 No campaign activity yet. Build one in the Campaign Builder.
               </p>
             )}
           </Card>
 
-          {/* Recent campaigns */}
+          <Card title="Delivery health" className="lg:col-span-1">
+            {hasActivity ? (
+              <>
+                <DonutChart
+                  data={donutData}
+                  centerValue={pct(overview!.delivery_rate)}
+                  centerLabel="delivered"
+                />
+                <div className="mt-3 flex items-center justify-center gap-4 text-xs text-ink-muted">
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                    {overview!.delivered.toLocaleString("en-IN")} delivered
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-rose-500" />
+                    {overview!.failed.toLocaleString("en-IN")} failed
+                  </span>
+                </div>
+              </>
+            ) : (
+              <p className="py-16 text-center text-sm text-ink-muted">—</p>
+            )}
+          </Card>
+
+          <Card title="Conversion rate" className="lg:col-span-1">
+            {hasActivity ? (
+              <>
+                <GaugeChart
+                  value={overview!.conversion_rate}
+                  label="of delivered"
+                />
+                <p className="mt-3 text-center text-xs text-ink-muted">
+                  {overview!.converted.toLocaleString("en-IN")} converted
+                </p>
+              </>
+            ) : (
+              <p className="py-16 text-center text-sm text-ink-muted">—</p>
+            )}
+          </Card>
+        </div>
+
+        {/* Campaign comparison (wide) + recent campaigns */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+          <Card title="Campaign performance" className="lg:col-span-3" glow>
+            {comparison.length > 0 ? (
+              <CampaignComparisonChart data={comparison} />
+            ) : (
+              <p className="py-16 text-center text-sm text-ink-muted">
+                No campaigns to compare yet.
+              </p>
+            )}
+          </Card>
+
           <Card
             title="Recent campaigns"
             className="lg:col-span-2"
@@ -154,22 +195,22 @@ export default function Dashboard() {
             }
           >
             {campaigns.length === 0 ? (
-              <p className="py-16 text-center text-sm text-slate-400">
+              <p className="py-16 text-center text-sm text-ink-muted">
                 No campaigns yet.
               </p>
             ) : (
-              <ul className="-mt-1 divide-y divide-slate-100">
+              <ul className="-mt-1 divide-y divide-hairline">
                 {campaigns.slice(0, 6).map((c) => (
                   <li key={c.id}>
                     <Link
                       to={`/campaigns/${c.id}`}
-                      className="-mx-2 flex items-center justify-between gap-3 rounded-2xl px-2 py-3 transition hover:bg-slate-50"
+                      className="-mx-2 flex items-center justify-between gap-3 rounded-2xl px-2 py-3 transition hover:bg-surface-2"
                     >
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-slate-800">
+                        <p className="truncate text-sm font-medium text-ink">
                           {c.name}
                         </p>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-ink-muted">
                           {c.channel} · {shortDate(c.created_at)}
                         </p>
                       </div>

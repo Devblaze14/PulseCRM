@@ -3,19 +3,22 @@ import { Link } from "react-router-dom";
 import TopBar from "../components/TopBar";
 import Card from "../components/Card";
 import StatusBadge from "../components/StatusBadge";
+import TableSkeleton from "../components/TableSkeleton";
 import { campaigns as campaignsApi } from "../api";
 import type { Campaign } from "../lib/types";
 import { shortDate } from "../lib/format";
 
 export default function Campaigns() {
   const [rows, setRows] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     campaignsApi
       .list()
       .then(setRows)
-      .catch((e) => setError(e.message));
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
@@ -26,13 +29,15 @@ export default function Campaigns() {
       />
       <div className="px-8 pb-8 pt-2">
         {error && (
-          <div className="mb-4 rounded-2xl border border-rose-100 bg-rose-50 p-3 text-sm text-rose-700">
+          <div className="mb-4 rounded-2xl border border-rose-100 bg-rose-50 p-3 text-sm text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300">
             {error}
           </div>
         )}
-        <Card title={`${rows.length} campaign${rows.length === 1 ? "" : "s"}`}>
-          {rows.length === 0 ? (
-            <p className="py-16 text-center text-sm text-slate-400">
+        <Card title={loading ? "Campaigns" : `${rows.length} campaign${rows.length === 1 ? "" : "s"}`}>
+          {loading ? (
+            <TableSkeleton columns={["w-40", "w-56", "w-20", "w-16", "w-24"]} />
+          ) : rows.length === 0 ? (
+            <p className="py-16 text-center text-sm text-ink-muted">
               No campaigns yet. Create one in the{" "}
               <Link to="/chat" className="font-medium text-brand-600 hover:underline">
                 Campaign Builder
@@ -41,8 +46,8 @@ export default function Campaigns() {
             </p>
           ) : (
             <table className="w-full text-left text-sm">
-              <thead className="text-xs uppercase tracking-wide text-slate-400">
-                <tr className="border-b border-slate-100">
+              <thead className="text-xs uppercase tracking-wide text-ink-muted">
+                <tr className="border-b border-hairline">
                   <th className="pb-3 font-medium">Name</th>
                   <th className="pb-3 font-medium">Goal</th>
                   <th className="pb-3 font-medium">Channel</th>
@@ -50,29 +55,29 @@ export default function Campaigns() {
                   <th className="pb-3 text-right font-medium">Created</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody className="divide-y divide-hairline">
                 {rows.map((c) => (
-                  <tr key={c.id} className="transition hover:bg-slate-50/60">
+                  <tr key={c.id} className="transition hover:bg-surface-2">
                     <td className="py-3.5">
                       <Link
                         to={`/campaigns/${c.id}`}
-                        className="font-medium text-slate-800 hover:text-brand-600"
+                        className="font-medium text-ink hover:text-brand-600"
                       >
                         {c.name}
                       </Link>
                     </td>
-                    <td className="max-w-xs truncate py-3.5 text-slate-500">
+                    <td className="max-w-xs truncate py-3.5 text-ink-soft">
                       {c.goal}
                     </td>
                     <td className="py-3.5">
-                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+                      <span className="rounded-full border border-hairline bg-surface-2 px-2.5 py-1 text-xs font-medium text-ink-soft">
                         {c.channel}
                       </span>
                     </td>
                     <td className="py-3.5">
                       <StatusBadge status={c.status} />
                     </td>
-                    <td className="py-3.5 text-right text-slate-400">
+                    <td className="tnum py-3.5 text-right text-ink-muted">
                       {shortDate(c.created_at)}
                     </td>
                   </tr>
