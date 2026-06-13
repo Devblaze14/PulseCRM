@@ -16,9 +16,7 @@ export default function TableSkeleton({
           <tr key={r}>
             {columns.map((w, c) => (
               <td key={c} className="py-3.5">
-                <div
-                  className={`h-3.5 ${w} animate-pulse rounded-full bg-gradient-to-r from-surface-2 via-hairline to-surface-2`}
-                />
+                <div className={`skeleton h-3.5 ${w} rounded-full`} />
               </td>
             ))}
           </tr>

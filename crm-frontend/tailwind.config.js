@@ -5,8 +5,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        // Inter is the premium dashboard typeface (loaded in index.html). Falls
-        // back to the system stack if the webfont hasn't loaded yet.
+        // Body copy: Inter. Falls back to the system stack until the webfont loads.
         sans: [
           "Inter",
           "ui-sans-serif",
@@ -14,6 +13,16 @@ export default {
           "-apple-system",
           "Segoe UI",
           "Roboto",
+          "sans-serif",
+        ],
+        // Headings, big metrics & UI labels: Geist — crisper and more "premium
+        // SaaS" than Inter. Use via the `font-display` utility.
+        display: [
+          "Geist",
+          "Inter",
+          "ui-sans-serif",
+          "system-ui",
+          "-apple-system",
           "sans-serif",
         ],
       },
@@ -72,14 +81,28 @@ export default {
       ringColor: {
         brand: "rgb(var(--ring) / <alpha-value>)",
       },
+      letterSpacing: {
+        // Display headings get a hair of negative tracking for that tight,
+        // premium look; big metric numbers a touch more.
+        "tight-display": "-0.02em",
+        "tighter-display": "-0.03em",
+      },
       keyframes: {
         "fade-in": {
           "0%": { opacity: "0", transform: "translateY(4px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        "scale-in": {
+          "0%": { opacity: "0", transform: "translateY(-4px) scale(0.98)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
+        shimmer: {
+          "100%": { transform: "translateX(100%)" },
+        },
       },
       animation: {
         "fade-in": "fade-in 0.25s ease-out",
+        "scale-in": "scale-in 0.16s cubic-bezier(0.16, 1, 0.3, 1)",
       },
     },
   },

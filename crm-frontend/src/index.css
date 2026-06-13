@@ -59,12 +59,69 @@ body,
 body {
   @apply bg-canvas font-sans text-ink antialiased;
   letter-spacing: -0.011em;
+  /* Crisper webfont rendering — premium dashboards lean on these. */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "cv01", "cv03", "ss01";
 }
 
-/* Big metric numbers should line up like the references. */
+/* Headings use Geist with tight tracking by default for the premium look.
+   Pages already set sizes/weights; this just swaps the family + tracking. */
+h1, h2, h3, h4 {
+  @apply font-display;
+  letter-spacing: -0.02em;
+}
+
+/* Dark theme: paint a soft blue ambient wash over the whole canvas (like the
+   NeuroBank reference, where the desktop behind the panels glows blue) plus a
+   faint vignette to deepen the corners. Fixed so it doesn't scroll away. */
+.dark body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(
+      90% 60% at 50% -10%,
+      rgba(59, 110, 246, 0.18),
+      rgba(59, 110, 246, 0) 55%
+    ),
+    radial-gradient(
+      70% 50% at 100% 0%,
+      rgba(59, 110, 246, 0.1),
+      rgba(59, 110, 246, 0) 60%
+    );
+}
+.dark #root {
+  position: relative;
+  z-index: 1;
+}
+
+/* Glassy raised surface for dark-theme cards/panels: a faint top-down gradient
+   plus a 1px inner top highlight, so cards read as lifted glass rather than flat
+   fills (the NeuroBank card look). Neutral in light mode. Apply alongside
+   `bg-surface` — the gradient sits on top of the base fill. */
+.dark .surface-raised {
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0) 40%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 18px 40px -24px rgba(0, 0, 0, 0.6);
+}
+
+/* Big metric numbers: Geist, tabular figures, tight tracking so they read like
+   the references' display numerals. */
 .tnum {
+  font-family:
+    "Geist", "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
+  letter-spacing: -0.025em;
 }
 
 /* Blue ambient glow behind dark-theme hero cards. Neutral (invisible) in light
@@ -117,4 +174,45 @@ body {
 }
 .dark .kw {
   @apply bg-brand-500/20 text-brand-200;
+}
+
+/* Clean keyboard-focus ring: a soft brand halo only on keyboard nav, never on
+   mouse clicks (avoids the heavy default outline on buttons/links). */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(var(--canvas)), 0 0 0 4px rgb(var(--ring) / 0.55);
+  border-radius: 0.5rem;
+}
+
+/* Premium shimmer skeleton: a light sweep travels across the placeholder while
+   data loads — reads far more polished than a static pulse. Apply `.skeleton`
+   to a surface-2 block. */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgb(var(--surface-2));
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(var(--ink) / 0.06),
+    transparent
+  );
+  animation: shimmer 1.6s infinite;
+}
+
+/* Card hover lift used across interactive cards/tiles — one gentle, springy
+   transition so the whole UI feels cohesive and responsive. */
+.lift {
+  transition:
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.lift:hover {
+  transform: translateY(-2px);
 }

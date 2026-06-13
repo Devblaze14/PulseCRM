@@ -10,8 +10,9 @@ function getInitial(): Theme {
   if (typeof window === "undefined") return "light";
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved === "light" || saved === "dark") return saved;
-  // Default to light; the user opts into dark via the toggle.
-  return "light";
+  // Default to the deep-navy dark theme (the NeuroBank look); the user opts
+  // into light via the toggle.
+  return "dark";
 }
 
 function apply(theme: Theme) {

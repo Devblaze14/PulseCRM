@@ -58,7 +58,7 @@ const NAV = [
 
 export default function Sidebar() {
   return (
-    <aside className="flex w-60 shrink-0 flex-col rounded-4xl border border-hairline bg-surface px-3 py-5 shadow-card">
+    <aside className="surface-raised flex w-60 shrink-0 flex-col rounded-4xl border border-hairline bg-surface px-3 py-5 shadow-card">
       <div className="mb-8 flex items-center gap-2.5 px-3">
         <img
           src="/pulse_crm_logo.png"

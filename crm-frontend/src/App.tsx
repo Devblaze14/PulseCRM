@@ -15,7 +15,7 @@ function AppShell() {
   return (
     <div className="flex h-screen gap-3 overflow-hidden bg-canvas p-3">
       <Sidebar />
-      <main className="flex flex-1 flex-col overflow-hidden rounded-4xl border border-hairline bg-surface shadow-card">
+      <main className="surface-raised flex flex-1 flex-col overflow-hidden rounded-4xl border border-hairline bg-surface shadow-card">
         <div className="flex-1 overflow-y-auto">
           <Routes>
             <Route path="/" element={<Dashboard />} />

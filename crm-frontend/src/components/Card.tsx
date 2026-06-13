@@ -18,7 +18,7 @@ export default function Card({
 }) {
   return (
     <section
-      className={`rounded-3xl border border-hairline bg-surface p-6 ${
+      className={`surface-raised rounded-3xl border border-hairline bg-surface p-6 ${
         glow ? "glow-hero shadow-card dark:shadow-glow" : "shadow-card"
       } ${className}`}
     >

@@ -26,19 +26,19 @@ export default function StatTile({
   const t = tone[accent];
 
   return (
-    <div className="group rounded-3xl border border-hairline bg-surface p-5 shadow-card transition duration-200 hover:-translate-y-0.5 hover:shadow-card-hover">
+    <div className="group lift surface-raised rounded-3xl border border-hairline bg-surface p-5 shadow-card hover:shadow-card-hover">
       <div className="flex items-center gap-2.5">
         <span
-          className={`flex h-8 w-8 items-center justify-center rounded-xl ${t.chip} ${t.chipInk} transition group-hover:scale-105`}
+          className={`flex h-8 w-8 items-center justify-center rounded-xl ${t.chip} ${t.chipInk} transition duration-200 group-hover:scale-110`}
         >
           <span className="h-2 w-2 rounded-full bg-current" />
         </span>
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
+        <p className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-ink-muted">
           {label}
         </p>
       </div>
       <div className="mt-4 flex items-end justify-between gap-2">
-        <p className="tnum text-[28px] font-semibold leading-none tracking-tight text-ink">
+        <p className="tnum text-[30px] font-semibold leading-none text-ink">
           {value}
         </p>
         {trend && (

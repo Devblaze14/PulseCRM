@@ -147,7 +147,7 @@ export default function TopBar({
             {initials}
           </button>
           {menuOpen && (
-            <div className="absolute right-0 top-12 z-20 w-56 animate-fade-in overflow-hidden rounded-2xl border border-hairline bg-surface shadow-card-hover">
+            <div className="surface-raised absolute right-0 top-12 z-20 w-56 origin-top-right animate-scale-in overflow-hidden rounded-2xl border border-hairline bg-surface shadow-card-hover">
               {isGuest ? (
                 <>
                   <div className="border-b border-hairline px-4 py-3">

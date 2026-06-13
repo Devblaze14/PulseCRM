@@ -9,14 +9,27 @@
     <!-- Mobile browser chrome matches the theme (dark navy default; light off-white). -->
     <meta name="theme-color" content="#06070d" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f3f2f7" media="(prefers-color-scheme: light)" />
-    <!-- Inter — premium dashboard typeface. Loaded via link (no npm dependency). -->
+    <!-- Premium type pairing: Geist for headings & numbers (crisp, modern),
+         Inter for body. Loaded via link (no npm dependency). -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Inter:wght@400;450;500;600;700&display=swap"
       rel="stylesheet"
     />
     <title>PulseCRM — AI Marketing Assistant</title>
+    <!-- Apply the saved theme (default dark) before paint to avoid a light→dark
+         flash. Mirrors getInitial() in src/lib/theme.ts. -->
+    <script>
+      (function () {
+        try {
+          var saved = localStorage.getItem("pulsecrm-theme");
+          if (saved !== "light") document.documentElement.classList.add("dark");
+        } catch (e) {
+          document.documentElement.classList.add("dark");
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

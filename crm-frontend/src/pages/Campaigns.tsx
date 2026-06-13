@@ -46,7 +46,7 @@ export default function Campaigns() {
             </p>
           ) : (
             <table className="w-full text-left text-sm">
-              <thead className="text-xs uppercase tracking-wide text-ink-muted">
+              <thead className="text-[10.5px] uppercase tracking-[0.08em] text-ink-muted">
                 <tr className="border-b border-hairline">
                   <th className="pb-3 font-medium">Name</th>
                   <th className="pb-3 font-medium">Goal</th>
