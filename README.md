@@ -135,6 +135,14 @@ Derived metrics like total spend and last order date are computed live from the 
 | Communication | One message to one customer, with its current status. |
 | CommunicationEvent | A log of every delivery update received. Each has a unique ID — that's what prevents double-counting. |
 
+## Getting data in
+
+Two things feed the database:
+
+- **Seed generator** (`python -m app.seed`) — ~500 realistic customers and ~2000 orders, grouped into personas (vip / lapsed / new / regular) so segments are meaningful out of the box. This is what you'd run for a demo.
+- **Ingestion API** — `POST /api/customers` and `POST /api/orders`, each accepting a single record or a bulk array and returning a `{created, skipped, errors}` summary. New customers are inserted, duplicate emails are skipped (so re-running a batch is harmless), and orders referencing an unknown customer are reported rather than inserted as orphans. Because spend and recency are *derived* from the orders table at query time, anything ingested here immediately shows up in segments, previews, and campaign stats — there's nothing extra to recompute. See [`crm-backend/api`](crm-backend/api/README.md#ingesting-data) for examples.
+
+## Running locally
 
 Open three terminals, one per service.
 
@@ -201,8 +209,8 @@ crm-frontend/                        the UI  → Vercel
 
 crm-backend/                         → Render (two services, one repo)
   api/        the core
-    app/routers/    HTTP endpoints (thin — receive and respond)
-    app/services/   business logic
+    app/routers/    HTTP endpoints (thin — receive and respond; incl. ingest)
+    app/services/   business logic (segment, campaign, send, receipt, stats, ai, ingest)
     app/lib/        the segment pipeline and status rules
     app/models.py   database tables
     app/seed.py     demo-data generator

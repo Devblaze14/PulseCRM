@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.lib.db import init_db
-from app.routers import ai, campaigns, customers, receipts, segments, stats
+from app.routers import ai, campaigns, customers, ingest, receipts, segments, stats
 
 logger = logging.getLogger("pulsecrm.startup")
 
@@ -59,6 +59,7 @@ app.add_middleware(
 app.include_router(segments.router)
 app.include_router(ai.router)
 app.include_router(campaigns.router)
+app.include_router(ingest.router)
 app.include_router(receipts.router)
 app.include_router(stats.router)
 app.include_router(customers.router)

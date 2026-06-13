@@ -42,6 +42,39 @@ class CustomerSummary(BaseModel):
     last_order_at: Optional[datetime]
 
 
+# --------------------------------------------------------------------------- #
+#  Ingestion (taking customers + orders into the system)
+# --------------------------------------------------------------------------- #
+class CustomerIn(BaseModel):
+    """One customer to ingest. `id`/`created_at` are server-assigned and omitted
+    here, exactly like CampaignCreate omits them — the wire contract carries only
+    what a caller can legitimately supply."""
+    name: str
+    email: str
+    phone: str
+    city: str
+    tags: list[str] = []
+
+
+class OrderIn(BaseModel):
+    """One order to ingest. `customer_id` must reference an existing customer;
+    ingestion validates that before inserting (no orphan FK rows). Spend/recency
+    are NOT supplied — they are derived from these orders at query time."""
+    customer_id: int
+    amount: float
+    items: list[dict[str, Any]] = []
+    status: str = "PLACED"  # PLACED | DELIVERED | RETURNED | CANCELLED
+
+
+class IngestResult(BaseModel):
+    """Outcome of a (possibly bulk) ingest. Non-fatal per-record problems are
+    reported in `errors` (index-tagged, user-safe) rather than failing the whole
+    batch — valid records still commit. Used by both ingest endpoints."""
+    created: int
+    skipped: int
+    errors: list[str] = []
+
+
 class SegmentPreviewResponse(BaseModel):
     count: int
     sample: list[CustomerSummary]  # up to 10 example customers
