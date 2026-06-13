@@ -63,7 +63,7 @@ export default function Sidebar() {
         <img
           src="/pulse_crm_logo.png"
           alt="PulseCRM"
-          className="h-9 w-9 object-contain"
+          className="h-9 w-9 rounded-xl object-contain p-0.5 dark:bg-white"
         />
         <span className="text-[17px] font-semibold tracking-tight text-ink">
           PulseCRM
