@@ -72,12 +72,18 @@ export default function Chat() {
       },
     ]);
 
-    // 2) Draft a channel-appropriate message for this audience.
+    // 2) Draft a channel-appropriate message AND a short campaign title for this
+    // audience, in parallel (both depend only on the goal text, so no extra
+    // latency). The title replaces the old blunt `text.slice(0, 40)` char-chop
+    // that left names cut mid-sentence ("...for people not"). Still editable.
     const summary = `${res.preview.count} customers`;
-    const draft = await ai.draftMessage(text, channel, summary);
+    const [draft, titleRes] = await Promise.all([
+      ai.draftMessage(text, channel, summary),
+      name ? Promise.resolve(null) : ai.generateTitle(text),
+    ]);
     setVariants(draft.messages);
     setMessage(draft.messages[0] ?? draft.message);
-    if (!name) setName(text.slice(0, 40));
+    if (titleRes?.title) setName(titleRes.title);
     setLoading(false);
   }
 

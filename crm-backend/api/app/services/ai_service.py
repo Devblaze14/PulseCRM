@@ -278,7 +278,72 @@ def draft_message(
 
 
 # --------------------------------------------------------------------------- #
-#  3) summarize_campaign
+#  3) generate_title
+# --------------------------------------------------------------------------- #
+# Hard cap on the title length. Short enough to never wrap/truncate in the
+# dashboard's "Recent campaigns" rows or the campaign-detail heading.
+_TITLE_MAX_CHARS = 42
+
+
+def _title_fallback(goal: str) -> str:
+    """Deterministic short title when the LLM is unavailable.
+
+    Truncates on a WORD boundary (never mid-word) and appends an ellipsis, so
+    even the fallback reads as a complete-looking label rather than the blunt
+    character chop that produced "Send discount of 20% off for people not".
+    """
+    g = " ".join(goal.split()).strip()  # collapse whitespace
+    if len(g) <= _TITLE_MAX_CHARS:
+        return g or "Untitled campaign"
+    cut = g[:_TITLE_MAX_CHARS].rsplit(" ", 1)[0].rstrip(",.;:- ")
+    return f"{cut}…" if cut else g[:_TITLE_MAX_CHARS].rstrip() + "…"
+
+
+def generate_title(goal: str) -> AIResult:
+    """Turn a plain-English campaign goal into a SHORT, complete title.
+
+    e.g. "Send discount of 20% off for people not bought T-shirts in 1 month"
+         → "20% Off Lapsed T-Shirt Buyers"
+
+    Always succeeds for the caller: on any LLM failure we fall back to a clean
+    word-boundary truncation so a campaign is never left with a half-sentence
+    name. `text` holds the title.
+    """
+    client = _get_client()
+    fallback = _title_fallback(goal)
+    if client is None:
+        return AIResult(ok=True, text=fallback,
+                        error="AI unavailable — using a trimmed title.")
+
+    system = (
+        "You name marketing campaigns. Given the marketer's goal, return a SHORT, "
+        "punchy campaign title: a NOUN PHRASE of at most 6 words and "
+        f"{_TITLE_MAX_CHARS} characters. Title Case. No quotes, no trailing "
+        "punctuation, no emojis, no preamble — output ONLY the title text. "
+        "It must read as a complete label, never a cut-off sentence."
+    )
+    try:
+        resp = client.chat.completions.create(
+            model=settings.GROQ_MODEL,
+            messages=[{"role": "system", "content": system},
+                     {"role": "user", "content": goal}],
+            temperature=0.5,
+            max_tokens=24,
+        )
+        title = (resp.choices[0].message.content or "").strip().strip('"').strip()
+        # Guard against a chatty or over-long model response: if it blew the
+        # budget, fall back to the clean truncation rather than ship a long line.
+        if not title or len(title) > _TITLE_MAX_CHARS + 8:
+            return AIResult(ok=True, text=fallback,
+                            error="AI title too long — using a trimmed title.")
+        return AIResult(ok=True, text=title)
+    except Exception:
+        return AIResult(ok=True, text=fallback,
+                        error="AI unavailable — using a trimmed title.")
+
+
+# --------------------------------------------------------------------------- #
+#  4) summarize_campaign
 # --------------------------------------------------------------------------- #
 def summarize_campaign(stats: dict) -> AIResult:
     """One plain-English performance insight from a campaign's stats dict.

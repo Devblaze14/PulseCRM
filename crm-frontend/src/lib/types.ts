@@ -63,6 +63,14 @@ export interface DraftResponse {
   note?: string | null;
 }
 
+export interface TitleResponse {
+  ok: boolean;
+  // Short, complete campaign title for the name field.
+  title: string;
+  // Set only when a fallback (trimmed) title was used instead of the LLM's.
+  note?: string | null;
+}
+
 export interface Campaign {
   id: number;
   name: string;

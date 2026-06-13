@@ -122,6 +122,17 @@ class DraftResponse(BaseModel):
     note: Optional[str] = None  # e.g. "AI unavailable — using a fallback draft."
 
 
+class TitleRequest(BaseModel):
+    goal: str
+
+
+class TitleResponse(BaseModel):
+    ok: bool
+    title: str
+    # Set only when a fallback (trimmed) title was used instead of the LLM's.
+    note: Optional[str] = None
+
+
 # --------------------------------------------------------------------------- #
 #  Campaigns
 # --------------------------------------------------------------------------- #

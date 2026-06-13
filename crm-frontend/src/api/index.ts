@@ -12,6 +12,7 @@ import type {
   SegmentFilter,
   SegmentPreview,
   SendResponse,
+  TitleResponse,
 } from "../lib/types";
 
 // --- AI --------------------------------------------------------------------
@@ -30,6 +31,8 @@ export const ai = {
       segment_summary,
       brand_voice,
     }),
+  generateTitle: (goal: string) =>
+    api.post<TitleResponse>("/api/ai/title", { goal }),
 };
 
 // --- Segments --------------------------------------------------------------

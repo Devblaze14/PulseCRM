@@ -17,6 +17,8 @@ from app.schemas import (
     DraftResponse,
     IntentRequest,
     IntentResponse,
+    TitleRequest,
+    TitleResponse,
 )
 from app.services import ai_service, segment_service
 
@@ -69,3 +71,13 @@ def draft_message(body: DraftRequest) -> DraftResponse:
         message=messages[0] if messages else "",  # first variant, for back-compat
         note=result.error,  # populated only when a fallback was used
     )
+
+
+@router.post("/title", response_model=TitleResponse)
+def title(body: TitleRequest) -> TitleResponse:
+    """Plain-English goal → short, complete campaign title (for the name field).
+
+    Always returns a usable title: on any AI failure the service falls back to a
+    clean word-boundary trim, so the campaign is never named with a half-sentence."""
+    result = ai_service.generate_title(body.goal)
+    return TitleResponse(ok=result.ok, title=result.text or "", note=result.error)
