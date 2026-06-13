@@ -22,14 +22,14 @@ export default function GaugeChart({
   const data = [{ name: "metric", value: clamped, fill: t.barFrom }];
 
   return (
-    <div className="relative">
-      <ResponsiveContainer width="100%" height={200}>
+    <div className="relative mx-auto aspect-square w-full max-w-[200px]">
+      <ResponsiveContainer width="100%" height="100%">
         <RadialBarChart
           data={data}
           startAngle={210}
           endAngle={-30}
-          innerRadius={70}
-          outerRadius={92}
+          innerRadius="74%"
+          outerRadius="100%"
           barSize={16}
         >
           <defs>
@@ -52,12 +52,14 @@ export default function GaugeChart({
           />
         </RadialBarChart>
       </ResponsiveContainer>
-      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-semibold tracking-tight text-ink">
+      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+        <span className="tnum text-2xl font-semibold text-ink">
           {clamped.toFixed(1)}%
         </span>
         {label && (
-          <span className="mt-0.5 text-xs text-ink-muted">{label}</span>
+          <span className="mt-0.5 truncate text-xs text-ink-muted">
+            {label}
+          </span>
         )}
       </div>
     </div>

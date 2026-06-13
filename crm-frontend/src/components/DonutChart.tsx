@@ -20,8 +20,8 @@ export default function DonutChart({
   const total = data.reduce((sum, d) => sum + d.value, 0);
 
   return (
-    <div className="relative">
-      <ResponsiveContainer width="100%" height={200}>
+    <div className="relative mx-auto aspect-square w-full max-w-[200px]">
+      <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
             data={data}
@@ -29,8 +29,8 @@ export default function DonutChart({
             nameKey="name"
             cx="50%"
             cy="50%"
-            innerRadius={62}
-            outerRadius={84}
+            innerRadius="68%"
+            outerRadius="92%"
             paddingAngle={total > 0 ? 2 : 0}
             startAngle={90}
             endAngle={-270}
@@ -44,12 +44,14 @@ export default function DonutChart({
         </PieChart>
       </ResponsiveContainer>
       {/* Centered headline overlaying the donut hole. */}
-      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-semibold tracking-tight text-ink">
+      <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
+        <span className="tnum text-2xl font-semibold text-ink">
           {centerValue}
         </span>
         {centerLabel && (
-          <span className="mt-0.5 text-xs text-ink-muted">{centerLabel}</span>
+          <span className="mt-0.5 truncate text-xs text-ink-muted">
+            {centerLabel}
+          </span>
         )}
       </div>
     </div>
