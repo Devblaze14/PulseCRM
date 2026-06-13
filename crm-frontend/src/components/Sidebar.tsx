@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import type { ReactNode } from "react";
+import Tour from "./Tour";
 
 // Minimal inline icons (no extra dependency) — stroke style matches the
 // clean, light dashboard references.
@@ -50,13 +52,15 @@ const ICONS: Record<string, ReactNode> = {
 };
 
 const NAV = [
-  { to: "/", label: "Dashboard", icon: "dashboard", end: true },
-  { to: "/chat", label: "Campaign Builder", icon: "builder" },
-  { to: "/campaigns", label: "Campaigns", icon: "campaigns" },
-  { to: "/customers", label: "Customers", icon: "customers" },
+  { to: "/", label: "Dashboard", icon: "dashboard", end: true, tour: "nav-dashboard" },
+  { to: "/chat", label: "Campaign Builder", icon: "builder", tour: "nav-builder" },
+  { to: "/campaigns", label: "Campaigns", icon: "campaigns", tour: "nav-campaigns" },
+  { to: "/customers", label: "Customers", icon: "customers", tour: "nav-customers" },
 ];
 
 export default function Sidebar() {
+  const [tourOpen, setTourOpen] = useState(false);
+
   return (
     <aside className="surface-raised flex w-60 shrink-0 flex-col rounded-4xl border border-hairline bg-surface px-3 py-5 shadow-card">
       <div className="mb-8 flex items-center gap-2.5 px-3">
@@ -68,7 +72,18 @@ export default function Sidebar() {
         <span className="text-[17px] font-semibold tracking-tight text-ink">
           PulseCRM
         </span>
+        <button
+          type="button"
+          onClick={() => setTourOpen(true)}
+          aria-label="Take a quick tour"
+          title="Take a quick tour"
+          className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-hairline text-[12px] font-semibold text-ink-muted transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-500/10"
+        >
+          ?
+        </button>
       </div>
+
+      {tourOpen && <Tour onClose={() => setTourOpen(false)} />}
 
       <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-ink-muted">
         Menu
@@ -79,6 +94,7 @@ export default function Sidebar() {
             key={item.to}
             to={item.to}
             end={item.end}
+            data-tour={item.tour}
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-2xl px-3 py-2.5 text-sm font-medium transition duration-200 ${
                 isActive
