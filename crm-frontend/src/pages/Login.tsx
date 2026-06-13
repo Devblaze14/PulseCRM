@@ -182,6 +182,27 @@ export default function Login() {
             {mode === "login" ? "Sign up" : "Log in"}
           </button>
         </p>
+
+        {/* Login is optional — let anyone skip straight into the app as a guest. */}
+        <div className="mt-5 border-t border-hairline pt-4">
+          <button
+            onClick={() => navigate(from, { replace: true })}
+            className="flex w-full items-center justify-center gap-1.5 text-sm font-medium text-ink-soft transition hover:text-ink"
+          >
+            Continue as guest
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.8}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4"
+            >
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTheme } from "../lib/theme";
 import { useAuth } from "../lib/auth";
@@ -17,7 +17,6 @@ export default function TopBar({
 }) {
   const { theme, toggle } = useTheme();
   const { user, signOut } = useAuth();
-  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -34,11 +33,14 @@ export default function TopBar({
   }, [menuOpen]);
 
   const email = user?.email ?? "";
-  const initials = (email.slice(0, 2) || "PC").toUpperCase();
+  const isGuest = !user;
+  // Real users show their email initials; guests get a neutral marker.
+  const initials = isGuest ? "G" : (email.slice(0, 2) || "PC").toUpperCase();
 
+  // Signing out drops back to guest mode (login is optional) — stay in the app.
   async function handleSignOut() {
     await signOut();
-    navigate("/login", { replace: true });
+    setMenuOpen(false);
   }
 
   return (
@@ -146,28 +148,60 @@ export default function TopBar({
           </button>
           {menuOpen && (
             <div className="absolute right-0 top-12 z-20 w-56 animate-fade-in overflow-hidden rounded-2xl border border-hairline bg-surface shadow-card-hover">
-              <div className="border-b border-hairline px-4 py-3">
-                <p className="text-xs text-ink-muted">Signed in as</p>
-                <p className="truncate text-sm font-medium text-ink">{email}</p>
-              </div>
-              <button
-                onClick={handleSignOut}
-                className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-ink-soft transition hover:bg-surface-2"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1.7}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-[18px] w-[18px]"
-                >
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                  <path d="M16 17l5-5-5-5M21 12H9" />
-                </svg>
-                Sign out
-              </button>
+              {isGuest ? (
+                <>
+                  <div className="border-b border-hairline px-4 py-3">
+                    <p className="text-xs text-ink-muted">Browsing as</p>
+                    <p className="truncate text-sm font-medium text-ink">Guest</p>
+                  </div>
+                  <Link
+                    to="/login"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-medium text-brand-600 transition hover:bg-surface-2"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.7}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-[18px] w-[18px]"
+                    >
+                      <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                      <path d="M10 17l5-5-5-5M15 12H3" />
+                    </svg>
+                    Sign in / Register
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <div className="border-b border-hairline px-4 py-3">
+                    <p className="text-xs text-ink-muted">Signed in as</p>
+                    <p className="truncate text-sm font-medium text-ink">
+                      {email}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleSignOut}
+                    className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-ink-soft transition hover:bg-surface-2"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.7}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="h-[18px] w-[18px]"
+                    >
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <path d="M16 17l5-5-5-5M21 12H9" />
+                    </svg>
+                    Sign out
+                  </button>
+                </>
+              )}
             </div>
           )}
         </div>

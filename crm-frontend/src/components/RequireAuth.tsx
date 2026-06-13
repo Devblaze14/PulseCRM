@@ -1,13 +1,11 @@
-import { Navigate, useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
 import { useAuth } from "../lib/auth";
 
-// Gates the app shell: redirects unauthenticated users to /login (remembering
-// where they were headed). Renders nothing while the initial session check runs
-// so an already-signed-in user never flashes the login screen.
+// Login is optional: anyone can use the app as a guest. We only hold rendering
+// while the initial session check runs so a real (signed-in) user's identity is
+// known before first paint — there is no redirect to /login.
 export default function RequireAuth({ children }: { children: ReactNode }) {
-  const { session, loading } = useAuth();
-  const location = useLocation();
+  const { loading } = useAuth();
 
   if (loading) {
     return (
@@ -15,10 +13,6 @@ export default function RequireAuth({ children }: { children: ReactNode }) {
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-hairline border-t-brand-600" />
       </div>
     );
-  }
-
-  if (!session) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
   return <>{children}</>;
