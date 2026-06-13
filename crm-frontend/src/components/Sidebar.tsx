@@ -60,14 +60,11 @@ export default function Sidebar() {
   return (
     <aside className="flex w-60 shrink-0 flex-col rounded-4xl border border-hairline bg-surface px-3 py-5 shadow-card">
       <div className="mb-8 flex items-center gap-2.5 px-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-brand-glow">
-          <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
-            <path
-              d="M13 2L4.5 13.5H11L9.5 22 19.5 9.5H13L13 2z"
-              fill="currentColor"
-            />
-          </svg>
-        </div>
+        <img
+          src="/pulse_crm_logo.png"
+          alt="PulseCRM"
+          className="h-9 w-9 object-contain"
+        />
         <span className="text-[17px] font-semibold tracking-tight text-ink">
           PulseCRM
         </span>

@@ -81,9 +81,11 @@ export default function Login() {
       />
       <div className="glow-hero relative w-full max-w-sm rounded-3xl border border-hairline bg-surface p-8 shadow-card-hover dark:shadow-glow">
         <div className="mb-7 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-lg font-bold text-white shadow-brand-glow">
-            P
-          </div>
+          <img
+            src="/pulse_crm_logo.png"
+            alt="PulseCRM"
+            className="mx-auto mb-3 h-14 w-14 object-contain"
+          />
           <h1 className="text-xl font-semibold tracking-tight text-ink">
             {mode === "login" ? "Welcome back" : "Create your account"}
           </h1>

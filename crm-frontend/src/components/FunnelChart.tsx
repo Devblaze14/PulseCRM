@@ -82,11 +82,13 @@ export default function FunnelChart({
             fontSize={12}
             formatter={(v: number) => v.toLocaleString("en-IN")}
           />
-          {/* Stage-to-stage conversion inside the bar — the drop-off story. */}
+          {/* Stage-to-stage conversion under the bar — the drop-off story.
+             Kept below the axis baseline (not insideBottom) so it never
+             collides with the count label on short bars. */}
           <LabelList
             dataKey="pctOfPrev"
-            position="insideBottom"
-            fill="#ffffff"
+            position="bottom"
+            fill={t.axisFaint}
             fontSize={11}
             offset={8}
             formatter={(v: number | null) => (v === null ? "" : `${v}%`)}
