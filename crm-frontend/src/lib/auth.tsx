@@ -25,6 +25,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // No Supabase configured → guest-only mode: finish loading with no session.
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
     // Read the persisted session on mount, then subscribe to future changes
     // (sign in, sign out, token refresh, OAuth redirect callback).
     supabase.auth.getSession().then(({ data }) => {
@@ -45,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user: session?.user ?? null,
       loading,
       signOut: async () => {
-        await supabase.auth.signOut();
+        await supabase?.auth.signOut();
       },
     }),
     [session, loading],

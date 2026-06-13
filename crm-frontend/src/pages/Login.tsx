@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import { supabase, isSupabaseConfigured } from "../lib/supabase";
 import { useAuth } from "../lib/auth";
 
 // Combined sign-in / sign-up screen. Google OAuth plus an email+password form
@@ -28,6 +28,10 @@ export default function Login() {
     e.preventDefault();
     setError(null);
     setNotice(null);
+    if (!supabase) {
+      setError("Sign in is unavailable right now. You can continue as a guest.");
+      return;
+    }
     setBusy(true);
     try {
       if (mode === "register") {
@@ -57,6 +61,10 @@ export default function Login() {
 
   async function handleGoogle() {
     setError(null);
+    if (!supabase) {
+      setError("Sign in is unavailable right now. You can continue as a guest.");
+      return;
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: window.location.origin + "/login" },
@@ -97,6 +105,17 @@ export default function Login() {
           </div>
         )}
 
+        {!isSupabaseConfigured && (
+          <div className="mb-4 rounded-2xl border border-amber-100 bg-amber-50 p-3 text-sm text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+            Accounts aren’t available in this environment. You can continue as a
+            guest below.
+          </div>
+        )}
+
+        <fieldset
+          disabled={!isSupabaseConfigured}
+          className="contents disabled:opacity-60"
+        >
         <button
           onClick={handleGoogle}
           className="flex w-full items-center justify-center gap-2.5 rounded-full border border-hairline bg-surface px-4 py-2.5 text-sm font-medium text-ink transition hover:bg-surface-2"
@@ -182,6 +201,7 @@ export default function Login() {
             {mode === "login" ? "Sign up" : "Log in"}
           </button>
         </p>
+        </fieldset>
 
         {/* Login is optional — let anyone skip straight into the app as a guest. */}
         <div className="mt-5 border-t border-hairline pt-4">
