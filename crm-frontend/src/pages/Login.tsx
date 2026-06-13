@@ -84,7 +84,7 @@ export default function Login() {
           <img
             src="/pulse_crm_logo.png"
             alt="PulseCRM"
-            className="mx-auto mb-3 h-14 w-14 rounded-2xl object-contain p-1 dark:bg-white"
+            className="mx-auto mb-3 h-14 w-14 object-contain"
           />
           <h1 className="text-xl font-semibold tracking-tight text-ink">
             {mode === "login" ? "Welcome back" : "Create your account"}
