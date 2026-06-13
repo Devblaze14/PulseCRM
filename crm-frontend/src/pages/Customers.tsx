@@ -6,6 +6,27 @@ import { customers as customersApi } from "../api";
 import type { CustomerSummary } from "../lib/types";
 import { inr, relativeDays } from "../lib/format";
 
+// Professional, muted tag palette. Each distinct tag maps deterministically to
+// one swatch so the same tag always shows the same colour across rows.
+const TAG_COLORS = [
+  "bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200",
+  "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200",
+  "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200",
+  "bg-violet-50 text-violet-700 ring-1 ring-inset ring-violet-200",
+  "bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200",
+  "bg-cyan-50 text-cyan-700 ring-1 ring-inset ring-cyan-200",
+  "bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-200",
+  "bg-teal-50 text-teal-700 ring-1 ring-inset ring-teal-200",
+];
+
+function tagColor(tag: string): string {
+  let hash = 0;
+  for (let i = 0; i < tag.length; i++) {
+    hash = (hash * 31 + tag.charCodeAt(i)) | 0;
+  }
+  return TAG_COLORS[Math.abs(hash) % TAG_COLORS.length];
+}
+
 export default function Customers() {
   const [rows, setRows] = useState<CustomerSummary[]>([]);
   const [search, setSearch] = useState("");
@@ -96,7 +117,7 @@ export default function Customers() {
                         {c.tags.map((t) => (
                           <span
                             key={t}
-                            className="rounded-full bg-surface-2 px-2 py-0.5 text-[10px] font-medium text-ink-muted"
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${tagColor(t)}`}
                           >
                             {t}
                           </span>
