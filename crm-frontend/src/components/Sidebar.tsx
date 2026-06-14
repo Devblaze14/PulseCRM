@@ -111,7 +111,7 @@ export default function Sidebar() {
 
       <div className="glow-hero mt-auto overflow-hidden rounded-3xl border border-brand-100 bg-brand-50 p-4 text-xs leading-relaxed text-ink-soft dark:border-brand-500/20 dark:bg-brand-500/10 dark:shadow-glow">
         <p className="mb-1 font-semibold text-brand-700 dark:text-brand-200">
-          ✨ AI-native CRM
+          AI-native CRM
         </p>
         Describe your audience in plain English → preview → draft → launch.
       </div>

@@ -26,8 +26,6 @@ PulseCRM is three independent services talking over HTTP. Keeping them separate 
 
 ![PulseCRM service architecture](docs/architecture.png)
 
-If the diagram doesn't render, here's the same structure in text:
-
 ```
    User (browser)
         │
