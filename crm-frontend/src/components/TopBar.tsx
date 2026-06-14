@@ -1,7 +1,25 @@
-import { Link } from "react-router-dom";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTheme } from "../lib/theme";
 import { useAuth } from "../lib/auth";
+import { campaigns as campaignsApi, customers as customersApi } from "../api";
+import type { Campaign, CustomerSummary } from "../lib/types";
+
+// A single thing the global search can jump to.
+type SearchResult = {
+  kind: "Page" | "Campaign" | "Customer";
+  label: string;
+  hint?: string;
+  to: string;
+};
+
+// Static destinations are always searchable, even before data loads.
+const PAGES: SearchResult[] = [
+  { kind: "Page", label: "Dashboard", to: "/" },
+  { kind: "Page", label: "Campaigns", to: "/campaigns" },
+  { kind: "Page", label: "Customers", to: "/customers" },
+  { kind: "Page", label: "Chat", to: "/chat" },
+];
 
 // Page header that lives inside the floating main panel. Title on the left; a
 // search pill, a primary "Create" action and a small avatar/notification cluster
@@ -17,8 +35,102 @@ export default function TopBar({
 }) {
   const { theme, toggle } = useTheme();
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // --- Global search ---------------------------------------------------------
+  const [query, setQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [allCampaigns, setAllCampaigns] = useState<Campaign[]>([]);
+  const [allCustomers, setAllCustomers] = useState<CustomerSummary[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  // Lazily load the searchable corpus the first time the box is focused. Failures
+  // are non-fatal — page/nav results still work.
+  function loadCorpus() {
+    if (loaded) return;
+    setLoaded(true);
+    campaignsApi.list().then(setAllCampaigns).catch(() => {});
+    customersApi.list().then(setAllCustomers).catch(() => {});
+  }
+
+  // Build and rank results for the current query (case-insensitive substring).
+  const results = useMemo<SearchResult[]>(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    const out: SearchResult[] = [];
+    for (const p of PAGES) {
+      if (p.label.toLowerCase().includes(q)) out.push(p);
+    }
+    for (const c of allCampaigns) {
+      if (
+        c.name.toLowerCase().includes(q) ||
+        c.goal.toLowerCase().includes(q)
+      ) {
+        out.push({
+          kind: "Campaign",
+          label: c.name,
+          hint: c.status,
+          to: `/campaigns/${c.id}`,
+        });
+      }
+    }
+    for (const c of allCustomers) {
+      if (
+        c.name.toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q) ||
+        c.city.toLowerCase().includes(q)
+      ) {
+        out.push({
+          kind: "Customer",
+          label: c.name,
+          hint: c.email,
+          to: "/customers",
+        });
+      }
+    }
+    return out.slice(0, 12);
+  }, [query, allCampaigns, allCustomers]);
+
+  // Keep the highlighted row valid as results change.
+  useEffect(() => {
+    setActiveIdx(0);
+  }, [query]);
+
+  function goTo(r: SearchResult) {
+    navigate(r.to);
+    setQuery("");
+    setSearchOpen(false);
+  }
+
+  function onSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIdx((i) => Math.min(i + 1, results.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIdx((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Enter") {
+      if (results[activeIdx]) goTo(results[activeIdx]);
+    } else if (e.key === "Escape") {
+      setSearchOpen(false);
+    }
+  }
+
+  // Close the search dropdown on any outside click.
+  useEffect(() => {
+    if (!searchOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [searchOpen]);
 
   // Close the avatar menu on any outside click.
   useEffect(() => {
@@ -55,18 +167,72 @@ export default function TopBar({
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="hidden items-center gap-2 rounded-full border border-hairline bg-surface-2 px-4 py-2 text-sm text-ink-muted transition focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-400/30 md:flex">
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.8}
-            className="h-4 w-4"
-          >
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3-3" strokeLinecap="round" />
-          </svg>
-          <span className="w-40">Search anything…</span>
+        <div ref={searchRef} className="relative hidden md:block">
+          <div className="flex items-center gap-2 rounded-full border border-hairline bg-surface-2 px-4 py-2 text-sm text-ink-muted transition focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-400/30">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.8}
+              className="h-4 w-4 shrink-0"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3-3" strokeLinecap="round" />
+            </svg>
+            <input
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                setSearchOpen(true);
+              }}
+              onFocus={() => {
+                loadCorpus();
+                setSearchOpen(true);
+              }}
+              onKeyDown={onSearchKeyDown}
+              placeholder="Search anything…"
+              aria-label="Search anything"
+              className="w-40 bg-transparent text-ink placeholder:text-ink-muted focus:outline-none"
+            />
+          </div>
+
+          {searchOpen && query.trim() && (
+            <div className="surface-raised absolute right-0 top-12 z-20 w-80 origin-top-right animate-scale-in overflow-hidden rounded-2xl border border-hairline bg-surface shadow-card-hover">
+              {results.length === 0 ? (
+                <p className="px-4 py-3 text-sm text-ink-muted">
+                  No results for “{query.trim()}”
+                </p>
+              ) : (
+                <ul className="max-h-80 overflow-y-auto py-1">
+                  {results.map((r, i) => (
+                    <li key={`${r.kind}-${r.to}-${r.label}`}>
+                      <button
+                        onMouseEnter={() => setActiveIdx(i)}
+                        onClick={() => goTo(r)}
+                        className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left transition ${
+                          i === activeIdx ? "bg-surface-2" : ""
+                        }`}
+                      >
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-medium text-ink">
+                            {r.label}
+                          </span>
+                          {r.hint && (
+                            <span className="block truncate text-xs text-ink-muted">
+                              {r.hint}
+                            </span>
+                          )}
+                        </span>
+                        <span className="shrink-0 rounded-full bg-surface-2 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-ink-muted">
+                          {r.kind}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
 
         <Link
