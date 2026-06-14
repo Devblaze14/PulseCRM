@@ -10,7 +10,7 @@ for the full architecture and the send→callback loop.
 app/
   routers/    HTTP layer only (parse, delegate, map errors). No business logic.
     segments.py   POST /api/segments/preview
-    ai.py         POST /api/ai/intent-to-segment, /api/ai/draft-message
+    ai.py         POST /api/ai/intent-to-segment, /api/ai/draft-message, /api/ai/title, /api/ai/chat
     campaigns.py  CRUD + POST /{id}/send, GET /{id}/communications, /{id}/stats
     ingest.py     POST /api/customers, /api/orders   (data ingestion, single or bulk)
     receipts.py   POST /api/receipts   (idempotent, order-safe callback sink)

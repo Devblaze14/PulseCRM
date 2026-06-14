@@ -18,6 +18,8 @@ A typical run takes about half a minute:
 
 No spreadsheets, SQL, or manual segmentation.
 
+A floating assistant is available on every page from the bottom-right corner. It answers questions about campaign performance, audience targeting, and message drafting, using your live funnel numbers (delivery, open, click and conversion rates, plus attributed revenue in ₹) so its figures match the dashboard. Quick-action buttons cover the common questions.
+
 ## Architecture
 
 PulseCRM is three independent services talking over HTTP. Keeping them separate lets each stay focused and deploy on its own.
@@ -203,7 +205,7 @@ A few things are deliberately out of scope:
 ```
 crm-frontend/                        the UI  → Vercel
   src/pages/        Dashboard, Chat (builder), Campaigns, CampaignDetail, Customers
-  src/components/   reusable UI (Sidebar, Card, StatTile, charts, …)
+  src/components/   reusable UI (Sidebar, Card, StatTile, charts, AssistantWidget, …)
   src/api/          typed wrappers around the backend
   src/lib/          shared types and formatting helpers
 

@@ -13,12 +13,17 @@ for the funnel charts. See the [root README](../README.md) for architecture.
 | `/campaigns/:id` | **Campaign Detail** | Per-campaign funnel, AI insight, live-polling communications table. |
 | `/customers` | **Customers** | Searchable table with total_spend, order_count, last_order_at. |
 
+A floating assistant (`AssistantWidget`) is mounted in the app shell, so it is
+available on every screen above. A bottom-right button opens a chat panel that
+answers questions from live funnel stats via `POST /api/ai/chat`, with
+quick-action buttons for common questions.
+
 ## Layout
 
 ```
 src/
   pages/        the five screens above
-  components/   Sidebar, TopBar, StatTile, Card, MessageBubble, AudiencePreview, StatusBadge
+  components/   Sidebar, TopBar, StatTile, Card, MessageBubble, AudiencePreview, StatusBadge, AssistantWidget
   api/          client.ts (typed fetch wrapper) + index.ts (per-resource calls)
   lib/          types.ts (mirror of backend schemas), format.ts (INR/date/percent helpers)
 ```
