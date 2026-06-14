@@ -8,11 +8,24 @@ import type { ChatMessage } from "../lib/types";
 // that answers free-form marketer questions (grounded in live funnel stats via
 // /api/ai/chat) with a few quick-action chips for common asks.
 
-// Quick-action chips: each sends a canned prompt through the same send() path.
+// Quick-action chips — mapped to PulseCRM's core jobs (segment → message →
+// send → measure). Each sends a canned prompt through the same send() path.
 const QUICK_ACTIONS: { label: string; prompt: string }[] = [
-  { label: "Funnel overview", prompt: "How are my campaigns performing overall?" },
-  { label: "Who to target", prompt: "Which customers should I reach out to next?" },
-  { label: "Draft a message", prompt: "Help me draft a win-back message." },
+  {
+    label: "Campaign performance",
+    prompt:
+      "How are my campaigns performing? Give me the delivery, open, click and conversion rates and the attributed revenue.",
+  },
+  {
+    label: "Build a segment",
+    prompt:
+      "Help me build an audience segment. What customer attributes and behaviours can I target on?",
+  },
+  {
+    label: "Draft a message",
+    prompt:
+      "Help me draft a personalised win-back message for lapsed shoppers across WhatsApp, SMS or Email.",
+  },
 ];
 
 // Brand mark: a "pulse" waveform (heartbeat/signal line) echoing the product
