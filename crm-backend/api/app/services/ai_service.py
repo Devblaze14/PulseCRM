@@ -376,3 +376,68 @@ def summarize_campaign(stats: dict) -> AIResult:
         return AIResult(ok=True, text=text or fallback)
     except Exception:
         return AIResult(ok=True, text=fallback)
+
+
+# --------------------------------------------------------------------------- #
+#  5) assistant_chat
+# --------------------------------------------------------------------------- #
+_ASSISTANT_SYSTEM_PROMPT = (
+    "You are PulseAI, the assistant inside a marketing CRM for a Direct-to-Consumer "
+    "brand. Be concise (2-4 sentences). When the answer involves performance, cite "
+    "the REAL numbers from the funnel stats provided below — never invent figures. "
+    "You help with audience targeting, drafting campaign messages, and reading "
+    "campaign performance. End with one concrete next action when it's useful. "
+    "If asked something outside the CRM's scope, say so briefly and steer back."
+)
+
+
+def _assistant_fallback(stats: dict) -> str:
+    """Friendly offline reply that still gives the marketer their headline numbers,
+    so the widget degrades gracefully (never an error wall) like the rest of the
+    AI surface."""
+    return (
+        "I'm offline right now, but here's your funnel: "
+        f"{stats.get('sent', 0)} sent · {stats.get('delivered', 0)} delivered · "
+        f"{stats.get('clicked', 0)} clicked · {stats.get('converted', 0)} converted."
+    )
+
+
+def assistant_chat(message: str, history: list[dict], stats: dict) -> AIResult:
+    """Answer a marketer's free-form question, grounded in the brand's live stats.
+
+    `history` is the prior turns ([{role, content}, ...], already capped by the
+    router to bound tokens). `stats` is the overall funnel dict so answers cite
+    real numbers instead of guessing. Degrades to a friendly fixed line (with the
+    headline funnel) if Groq is unavailable, so the widget never breaks.
+    """
+    client = _get_client()
+    if client is None:
+        return AIResult(ok=True, text=_assistant_fallback(stats),
+                        error="AI unavailable — showing your funnel instead.")
+
+    # System message + a separate context block carrying the live stats as JSON,
+    # mirroring how summarize_campaign hands the model the numbers to reason over.
+    messages: list[dict] = [
+        {"role": "system", "content": _ASSISTANT_SYSTEM_PROMPT},
+        {"role": "system", "content": f"Current overall funnel stats: {json.dumps(stats)}"},
+    ]
+    # Replay prior turns (roles are constrained to user/assistant by the schema).
+    for turn in history:
+        role = turn.get("role")
+        content = turn.get("content")
+        if role in ("user", "assistant") and isinstance(content, str) and content.strip():
+            messages.append({"role": role, "content": content})
+    messages.append({"role": "user", "content": message})
+
+    try:
+        resp = client.chat.completions.create(
+            model=settings.GROQ_MODEL,
+            messages=messages,
+            temperature=0.4,
+            max_tokens=250,
+        )
+        text = (resp.choices[0].message.content or "").strip()
+        return AIResult(ok=True, text=text or _assistant_fallback(stats))
+    except Exception:
+        return AIResult(ok=True, text=_assistant_fallback(stats),
+                        error="AI unavailable — showing your funnel instead.")

@@ -3,8 +3,10 @@
 
 import { api } from "./client";
 import type {
+  AssistantChatResponse,
   Campaign,
   CampaignStats,
+  ChatMessage,
   Communication,
   CustomerSummary,
   DraftResponse,
@@ -33,6 +35,9 @@ export const ai = {
     }),
   generateTitle: (goal: string) =>
     api.post<TitleResponse>("/api/ai/title", { goal }),
+  // Free-form chat for the floating assistant; `history` carries prior turns.
+  chat: (message: string, history: ChatMessage[]) =>
+    api.post<AssistantChatResponse>("/api/ai/chat", { message, history }),
 };
 
 // --- Segments --------------------------------------------------------------

@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
+import AssistantWidget from "./components/AssistantWidget";
 import RequireAuth from "./components/RequireAuth";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -26,6 +27,8 @@ function AppShell() {
           </Routes>
         </div>
       </main>
+      {/* Floating AI assistant — fixed-position, so it overlays every route. */}
+      <AssistantWidget />
     </div>
   );
 }

@@ -133,6 +133,26 @@ class TitleResponse(BaseModel):
     note: Optional[str] = None
 
 
+class ChatMessage(BaseModel):
+    """One turn in the assistant conversation. Roles mirror the LLM convention."""
+    role: str       # "user" | "assistant"
+    content: str
+
+
+class AssistantChatRequest(BaseModel):
+    """A marketer's free-form question to the floating PulseAI assistant, plus the
+    prior turns for context. The router caps `history` length before the LLM call."""
+    message: str
+    history: list[ChatMessage] = []
+
+
+class AssistantChatResponse(BaseModel):
+    ok: bool
+    reply: str
+    # Set when a degraded/offline fallback reply was used instead of the LLM's.
+    note: Optional[str] = None
+
+
 # --------------------------------------------------------------------------- #
 #  Campaigns
 # --------------------------------------------------------------------------- #

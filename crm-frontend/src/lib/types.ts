@@ -71,6 +71,19 @@ export interface TitleResponse {
   note?: string | null;
 }
 
+// One turn in the floating PulseAI assistant conversation.
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface AssistantChatResponse {
+  ok: boolean;
+  reply: string;
+  // Set only when a degraded/offline fallback reply was used.
+  note?: string | null;
+}
+
 export interface Campaign {
   id: number;
   name: string;

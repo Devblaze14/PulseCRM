@@ -13,6 +13,8 @@ from sqlmodel import Session
 from app.lib.db import get_session
 from app.lib.segment_validator import SegmentValidationError, validate_segment
 from app.schemas import (
+    AssistantChatRequest,
+    AssistantChatResponse,
     DraftRequest,
     DraftResponse,
     IntentRequest,
@@ -20,7 +22,7 @@ from app.schemas import (
     TitleRequest,
     TitleResponse,
 )
-from app.services import ai_service, segment_service
+from app.services import ai_service, segment_service, stats_service
 
 router = APIRouter(prefix="/api/ai", tags=["ai"])
 
@@ -81,3 +83,19 @@ def title(body: TitleRequest) -> TitleResponse:
     clean word-boundary trim, so the campaign is never named with a half-sentence."""
     result = ai_service.generate_title(body.goal)
     return TitleResponse(ok=result.ok, title=result.text or "", note=result.error)
+
+
+@router.post("/chat", response_model=AssistantChatResponse)
+def chat(
+    body: AssistantChatRequest,
+    session: Session = Depends(get_session),
+) -> AssistantChatResponse:
+    """Free-form marketer question → a concise reply grounded in live funnel stats.
+
+    Reuses the dashboard's own aggregator so the assistant cites real numbers, and
+    always returns ok=True (the service degrades to a friendly offline reply rather
+    than erroring) so the floating widget never shows a failure wall."""
+    stats = stats_service.compute_stats(session)  # overall funnel (no campaign_id)
+    history = [m.model_dump() for m in body.history][-6:]  # bound token cost
+    result = ai_service.assistant_chat(body.message, history, stats.model_dump())
+    return AssistantChatResponse(ok=result.ok, reply=result.text or "", note=result.error)

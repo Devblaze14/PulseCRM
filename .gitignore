@@ -41,6 +41,10 @@ _*.py
 # ─── Assignment Files ───────────────────────────────────────────────────────
 Xeno Engineering Internship Assignment - 2026.md
 Xeno Engineering Internship Assignment - 2026.pdf
+xeno_extract.txt
+
+# ─── One-off / maintenance scripts ──────────────────────────────────────────
+resolve_stuck_queued.py
 
 # ─── Local working docs ─────────────────────────────────────────────────────
 PROJECT_OVERVIEW.md
