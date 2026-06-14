@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import TopBar from "../components/TopBar";
 import Card from "../components/Card";
+import ExpandableCard from "../components/ExpandableCard";
 import StatTile from "../components/StatTile";
 import StatusBadge from "../components/StatusBadge";
 import FunnelChart from "../components/FunnelChart";
+import FunnelBreakdown from "../components/FunnelBreakdown";
 import DonutChart from "../components/DonutChart";
 import GaugeChart from "../components/GaugeChart";
 import CampaignComparisonChart from "../components/CampaignComparisonChart";
@@ -119,55 +121,129 @@ export default function Dashboard() {
 
         {/* Funnel (wide) + delivery donut + conversion gauge */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-          <Card title="Overall engagement funnel" className="lg:col-span-3" glow>
-            {hasActivity ? (
+          {hasActivity ? (
+            <ExpandableCard
+              title="Overall engagement funnel"
+              className="lg:col-span-3"
+              glow
+              expanded={
+                <>
+                  <FunnelChart
+                    data={funnel}
+                    gradientId="funnelBarExpanded"
+                    height={400}
+                  />
+                  <FunnelBreakdown data={funnel} />
+                </>
+              }
+            >
               <FunnelChart data={funnel} gradientId="funnelBar" />
-            ) : (
+            </ExpandableCard>
+          ) : (
+            <Card title="Overall engagement funnel" className="lg:col-span-3" glow>
               <p className="py-16 text-center text-sm text-ink-muted">
                 No campaign activity yet. Build one in the Campaign Builder.
               </p>
-            )}
-          </Card>
+            </Card>
+          )}
 
-          <Card title="Delivery health" className="lg:col-span-1">
-            {hasActivity ? (
-              <>
-                <DonutChart
-                  data={donutData}
-                  centerValue={pct(overview!.delivery_rate)}
-                  centerLabel="delivered"
-                />
-                <div className="mt-3 flex items-center justify-center gap-4 text-xs text-ink-muted">
-                  <span className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
-                    {overview!.delivered.toLocaleString("en-IN")} delivered
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-rose-500" />
-                    {overview!.failed.toLocaleString("en-IN")} failed
-                  </span>
-                </div>
-              </>
-            ) : (
+          {hasActivity ? (
+            <ExpandableCard
+              title="Delivery health"
+              className="lg:col-span-1"
+              expanded={
+                <>
+                  <DonutChart
+                    data={donutData}
+                    centerValue={pct(overview!.delivery_rate)}
+                    centerLabel="delivered"
+                    maxWidth={320}
+                  />
+                  <div className="mx-auto mt-6 max-w-sm divide-y divide-hairline text-sm">
+                    <Row
+                      dot="bg-emerald-500"
+                      label="Delivered"
+                      value={overview!.delivered.toLocaleString("en-IN")}
+                      sub={pct(overview!.delivery_rate)}
+                    />
+                    <Row
+                      dot="bg-rose-500"
+                      label="Failed"
+                      value={overview!.failed.toLocaleString("en-IN")}
+                      sub={pct(100 - overview!.delivery_rate)}
+                    />
+                    <Row
+                      label="Total sent"
+                      value={overview!.sent.toLocaleString("en-IN")}
+                    />
+                  </div>
+                </>
+              }
+            >
+              <DonutChart
+                data={donutData}
+                centerValue={pct(overview!.delivery_rate)}
+                centerLabel="delivered"
+              />
+              <div className="mt-3 flex items-center justify-center gap-4 text-xs text-ink-muted">
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                  {overview!.delivered.toLocaleString("en-IN")} delivered
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-rose-500" />
+                  {overview!.failed.toLocaleString("en-IN")} failed
+                </span>
+              </div>
+            </ExpandableCard>
+          ) : (
+            <Card title="Delivery health" className="lg:col-span-1">
               <p className="py-16 text-center text-sm text-ink-muted">—</p>
-            )}
-          </Card>
+            </Card>
+          )}
 
-          <Card title="Conversion rate" className="lg:col-span-1">
-            {hasActivity ? (
-              <>
-                <GaugeChart
-                  value={overview!.conversion_rate}
-                  label="of delivered"
-                />
-                <p className="mt-3 text-center text-xs text-ink-muted">
-                  {overview!.converted.toLocaleString("en-IN")} converted
-                </p>
-              </>
-            ) : (
+          {hasActivity ? (
+            <ExpandableCard
+              title="Conversion rate"
+              className="lg:col-span-1"
+              expanded={
+                <>
+                  <GaugeChart
+                    value={overview!.conversion_rate}
+                    label="of delivered"
+                    maxWidth={320}
+                  />
+                  <div className="mx-auto mt-6 max-w-sm divide-y divide-hairline text-sm">
+                    <Row
+                      label="Converted"
+                      value={overview!.converted.toLocaleString("en-IN")}
+                      sub={pct(overview!.conversion_rate)}
+                    />
+                    <Row
+                      label="Delivered"
+                      value={overview!.delivered.toLocaleString("en-IN")}
+                    />
+                    <Row
+                      label="Attributed revenue"
+                      value={inr(overview!.attributed_revenue)}
+                    />
+                  </div>
+                </>
+              }
+            >
+              <GaugeChart
+                value={overview!.conversion_rate}
+                label="of delivered"
+              />
+              <p className="mt-3 text-center text-xs text-ink-muted">
+                {overview!.converted.toLocaleString("en-IN")} converted
+              </p>
+            </ExpandableCard>
+          ) : (
+            <Card title="Conversion rate" className="lg:col-span-1">
               <p className="py-16 text-center text-sm text-ink-muted">—</p>
-            )}
-          </Card>
+            </Card>
+          )}
         </div>
 
         {/* Campaign comparison (wide) + recent campaigns */}
@@ -224,5 +300,31 @@ export default function Dashboard() {
         </div>
       </div>
     </>
+  );
+}
+
+// Compact label/value row used in the expanded chart modals' detail lists.
+function Row({
+  label,
+  value,
+  sub,
+  dot,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  dot?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between py-2.5">
+      <span className="flex items-center gap-2 text-ink-soft">
+        {dot && <span className={`h-2 w-2 rounded-full ${dot}`} />}
+        {label}
+      </span>
+      <span className="flex items-baseline gap-2">
+        <span className="tnum font-semibold text-ink">{value}</span>
+        {sub && <span className="text-xs text-ink-muted">{sub}</span>}
+      </span>
+    </div>
   );
 }

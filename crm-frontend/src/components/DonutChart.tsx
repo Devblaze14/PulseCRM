@@ -10,17 +10,23 @@ export default function DonutChart({
   data,
   centerValue,
   centerLabel,
+  maxWidth = 200,
 }: {
   // Each slice: a label, a numeric value, and one of the theme colour keys.
   data: { name: string; value: number; color: "success" | "danger" | "track" }[];
   centerValue: string;
   centerLabel?: string;
+  /** Max pixel width of the donut; larger in the expanded modal view. */
+  maxWidth?: number;
 }) {
   const t = useChartTheme();
   const total = data.reduce((sum, d) => sum + d.value, 0);
 
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-[200px]">
+    <div
+      className="relative mx-auto aspect-square w-full"
+      style={{ maxWidth }}
+    >
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie

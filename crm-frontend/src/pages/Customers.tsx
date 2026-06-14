@@ -33,7 +33,12 @@ export default function Customers() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Debounced search: refetch 300ms after the user stops typing.
+  // Filters (applied client-side: the list is already fully loaded in memory).
+  const [city, setCity] = useState("");
+  const [tag, setTag] = useState("");
+  const [minOrders, setMinOrders] = useState(0);
+  const [minSpend, setMinSpend] = useState(0);
+
   useEffect(() => {
     const t = setTimeout(() => {
       customersApi
@@ -45,14 +50,39 @@ export default function Customers() {
     return () => clearTimeout(t);
   }, []);
 
-  const filtered = search
-    ? rows.filter(
-        (c) =>
-          c.name.toLowerCase().includes(search.toLowerCase()) ||
-          c.email.toLowerCase().includes(search.toLowerCase()) ||
-          c.city.toLowerCase().includes(search.toLowerCase())
-      )
-    : rows;
+  // Distinct cities / tags present in the data, for the dropdown options.
+  const cities = Array.from(new Set(rows.map((c) => c.city)))
+    .filter(Boolean)
+    .sort();
+  const tags = Array.from(new Set(rows.flatMap((c) => c.tags)))
+    .filter(Boolean)
+    .sort();
+
+  const q = search.trim().toLowerCase();
+  const filtered = rows.filter((c) => {
+    if (
+      q &&
+      !c.name.toLowerCase().includes(q) &&
+      !c.email.toLowerCase().includes(q) &&
+      !c.city.toLowerCase().includes(q)
+    )
+      return false;
+    if (city && c.city !== city) return false;
+    if (tag && !c.tags.includes(tag)) return false;
+    if (c.order_count < minOrders) return false;
+    if (c.total_spend < minSpend) return false;
+    return true;
+  });
+
+  const activeFilters =
+    (city ? 1 : 0) + (tag ? 1 : 0) + (minOrders ? 1 : 0) + (minSpend ? 1 : 0);
+
+  function clearFilters() {
+    setCity("");
+    setTag("");
+    setMinOrders(0);
+    setMinSpend(0);
+  }
 
   return (
     <>
@@ -89,9 +119,74 @@ export default function Customers() {
             </div>
           }
         >
+          {/* Filter bar */}
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <FilterSelect
+              label="City"
+              value={city}
+              onChange={setCity}
+              options={cities.map((c) => ({ value: c, label: c }))}
+            />
+            <FilterSelect
+              label="Tag"
+              value={tag}
+              onChange={setTag}
+              options={tags.map((t) => ({ value: t, label: t }))}
+            />
+            <FilterSelect
+              label="Orders"
+              value={String(minOrders)}
+              onChange={(v) => setMinOrders(Number(v))}
+              options={[
+                { value: "1", label: "1+ orders" },
+                { value: "2", label: "2+ orders" },
+                { value: "5", label: "5+ orders" },
+                { value: "10", label: "10+ orders" },
+              ]}
+              allLabel="Any orders"
+              allValue="0"
+            />
+            <FilterSelect
+              label="Spend"
+              value={String(minSpend)}
+              onChange={(v) => setMinSpend(Number(v))}
+              options={[
+                { value: "1000", label: "₹1k+" },
+                { value: "5000", label: "₹5k+" },
+                { value: "10000", label: "₹10k+" },
+                { value: "50000", label: "₹50k+" },
+              ]}
+              allLabel="Any spend"
+              allValue="0"
+            />
+            {activeFilters > 0 && (
+              <button
+                onClick={clearFilters}
+                className="ml-1 rounded-full px-3 py-1.5 text-xs font-medium text-ink-muted transition hover:bg-surface-2 hover:text-ink"
+              >
+                Clear filters ({activeFilters})
+              </button>
+            )}
+          </div>
+
           <div className="max-h-[68vh] overflow-y-auto">
             {loading ? (
               <TableSkeleton columns={["w-44", "w-24", "w-32", "w-20", "w-12", "w-20"]} rows={8} />
+            ) : filtered.length === 0 ? (
+              <p className="py-16 text-center text-sm text-ink-muted">
+                No customers match these filters.
+                {(activeFilters > 0 || search) && (
+                  <button
+                    onClick={() => {
+                      clearFilters();
+                      setSearch("");
+                    }}
+                    className="ml-1 font-medium text-brand-600 hover:underline"
+                  >
+                    Reset
+                  </button>
+                )}
+              </p>
             ) : (
             <table className="w-full text-left text-sm">
               <thead className="sticky top-0 z-10 bg-surface text-xs uppercase tracking-wide text-ink-muted">
@@ -142,5 +237,52 @@ export default function Customers() {
         </Card>
       </div>
     </>
+  );
+}
+
+// A small styled dropdown used in the customers filter bar. An empty value means
+// "no filter" and shows `allLabel` (defaults to "All <label>"). When a value is
+// selected the control is tinted to read as active.
+function FilterSelect({
+  label,
+  value,
+  onChange,
+  options,
+  allLabel,
+  allValue = "",
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: { value: string; label: string }[];
+  allLabel?: string;
+  /** The value representing "no filter" (e.g. "0" for numeric selects). */
+  allValue?: string;
+}) {
+  const active = value !== allValue;
+  return (
+    <div
+      className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition ${
+        active
+          ? "border-brand-300 bg-brand-50 text-brand-700 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-200"
+          : "border-hairline bg-surface-2 text-ink-soft"
+      }`}
+    >
+      <span className="text-xs font-medium text-ink-muted">{label}</span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="cursor-pointer bg-transparent text-sm font-medium outline-none"
+      >
+        <option value={allValue}>
+          {allLabel ?? `All ${label.toLowerCase()}`}
+        </option>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }

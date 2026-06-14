@@ -2,9 +2,11 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import TopBar from "../components/TopBar";
 import Card from "../components/Card";
+import ExpandableCard from "../components/ExpandableCard";
 import StatTile from "../components/StatTile";
 import StatusBadge from "../components/StatusBadge";
 import FunnelChart from "../components/FunnelChart";
+import FunnelBreakdown from "../components/FunnelBreakdown";
 import { campaigns as campaignsApi } from "../api";
 import type { Campaign, CampaignStats, Communication } from "../lib/types";
 import { inr, pct } from "../lib/format";
@@ -123,9 +125,22 @@ export default function CampaignDetail() {
           />
         </div>
 
-        <Card title="Engagement funnel" glow>
+        <ExpandableCard
+          title="Engagement funnel"
+          glow
+          expanded={
+            <>
+              <FunnelChart
+                data={funnel}
+                gradientId="detailBarExpanded"
+                height={400}
+              />
+              <FunnelBreakdown data={funnel} />
+            </>
+          }
+        >
           <FunnelChart data={funnel} gradientId="detailBar" />
-        </Card>
+        </ExpandableCard>
 
         {/* Communications table */}
         <Card title={`Communications (${comms.length})`}>

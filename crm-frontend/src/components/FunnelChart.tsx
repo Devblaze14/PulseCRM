@@ -24,9 +24,11 @@ type FunnelDatum = { stage: string; value: number };
 export default function FunnelChart({
   data,
   gradientId,
+  height = 300,
 }: {
   data: FunnelDatum[];
   gradientId: string;
+  height?: number;
 }) {
   const t = useChartTheme();
 
@@ -41,7 +43,7 @@ export default function FunnelChart({
   });
 
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={height}>
       <BarChart
         data={enriched}
         barCategoryGap="28%"

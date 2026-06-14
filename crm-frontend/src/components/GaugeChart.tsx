@@ -13,16 +13,22 @@ import { useChartTheme } from "../lib/chart";
 export default function GaugeChart({
   value,
   label,
+  maxWidth = 200,
 }: {
   value: number; // already in 0–100 form
   label?: string;
+  /** Max pixel width of the gauge; larger in the expanded modal view. */
+  maxWidth?: number;
 }) {
   const t = useChartTheme();
   const clamped = Math.max(0, Math.min(100, value));
   const data = [{ name: "metric", value: clamped, fill: t.barFrom }];
 
   return (
-    <div className="relative mx-auto aspect-square w-full max-w-[200px]">
+    <div
+      className="relative mx-auto aspect-square w-full"
+      style={{ maxWidth }}
+    >
       <ResponsiveContainer width="100%" height="100%">
         <RadialBarChart
           data={data}
