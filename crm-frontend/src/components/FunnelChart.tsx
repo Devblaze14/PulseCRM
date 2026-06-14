@@ -45,7 +45,7 @@ export default function FunnelChart({
       <BarChart
         data={enriched}
         barCategoryGap="28%"
-        margin={{ top: 8, right: 8, bottom: 20, left: 0 }}
+        margin={{ top: 8, right: 36, bottom: 4, left: 0 }}
       >
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -82,20 +82,73 @@ export default function FunnelChart({
             fontSize={12}
             formatter={(v: number) => v.toLocaleString("en-IN")}
           />
-          {/* Stage-to-stage conversion under the bar — the drop-off story.
-             Kept below the axis baseline (not insideBottom) so it never
-             collides with the count label on short bars. */}
-          <LabelList
-            dataKey="pctOfPrev"
-            position="bottom"
-            fill={t.axisFaint}
-            fontSize={11}
-            offset={8}
-            formatter={(v: number | null) => (v === null ? "" : `${v}%`)}
-          />
+          {/* Stage-to-stage conversion shown INSIDE the bar (near the top), so
+             it never collides with the X-axis stage labels — which is what made
+             "Delivered" + "96%" mash together. Bars too short to hold the label
+             get it placed just above instead (handled in PctLabel). */}
+          <LabelList dataKey="pctOfPrev" content={<PctLabel />} />
         </Bar>
       </BarChart>
     </ResponsiveContainer>
+  );
+}
+
+// Per-bar conversion % label. Drawn INSIDE the bar near the top so it never
+// collides with the X-axis stage labels below (the old "Delivered"+"96%" mash).
+// When a bar is too short to legibly hold the text inside, we move the label to
+// the RIGHT of the bar instead — clear of both the axis labels and the count
+// label that sits above the bar top.
+// The first stage has no predecessor (value === null) → nothing is rendered.
+type PctLabelProps = {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  value?: number | null;
+};
+
+const MIN_INSIDE_HEIGHT = 26; // px: below this the label won't fit inside cleanly
+
+function PctLabel({ x, y, width, height, value }: PctLabelProps) {
+  if (
+    value == null ||
+    x == null ||
+    y == null ||
+    width == null ||
+    height == null
+  ) {
+    return null;
+  }
+  const fitsInside = height >= MIN_INSIDE_HEIGHT;
+  if (fitsInside) {
+    // Centered just below the bar's top edge, white for contrast on the bar.
+    return (
+      <text
+        x={x + width / 2}
+        y={y + 16}
+        textAnchor="middle"
+        fontSize={11}
+        fontWeight={600}
+        fill="#ffffff"
+      >
+        {`${value}%`}
+      </text>
+    );
+  }
+  // Short bar: place the label to the right of the bar, vertically centered on
+  // it, so it doesn't stack under the count label above the bar.
+  return (
+    <text
+      x={x + width + 6}
+      y={y + height / 2}
+      textAnchor="start"
+      dominantBaseline="central"
+      fontSize={11}
+      fontWeight={600}
+      fill="#94a3b8"
+    >
+      {`${value}%`}
+    </text>
   );
 }
 
