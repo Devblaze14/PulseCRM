@@ -192,9 +192,9 @@ Then open http://localhost:5173, go to Campaign Builder, type something like *"w
 
 A few things are deliberately out of scope:
 
-- **No real messaging integration.** The interesting parts — async delivery, retries, idempotency, out-of-order handling — are all in the simulator, so a paid provider account isn't needed to demonstrate them.
-- **No heavy job queue.** The Channel dispatches callbacks with lightweight in-process async tasks under a concurrency cap. At real scale you'd swap in a managed queue (SQS / Redis / QStash) and a worker pool — see [`crm-backend/channel/README.md`](crm-backend/channel/README.md). The CRM side already handles that reality.
-- **No auth or multi-tenancy.** Single-user setup; not needed here.
+- **No real messaging integration.** The simulator already covers the parts that matter: async delivery, retries, idempotency, and out-of-order handling. You don't need a paid provider account to see those working.
+- **No heavy job queue.** The Channel dispatches callbacks with lightweight in-process async tasks under a concurrency cap. At real scale you'd swap in a managed queue (SQS, Redis, or QStash) and a worker pool, as described in [`crm-backend/channel/README.md`](crm-backend/channel/README.md). The CRM side already handles that case.
+- **No auth or multi-tenancy.** It's a single-user setup, which is all this needs.
 - **No sales-CRM features** (deals, pipelines, support tickets). This is a tool for reaching shoppers, not running a sales team.
 - **No deeply nested filters.** One level of AND/OR covers real marketing segments and keeps the safety checks easy to audit.
 
