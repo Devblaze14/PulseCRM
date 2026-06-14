@@ -40,6 +40,20 @@ def list_all(session: Session = Depends(get_session)) -> list[CampaignRead]:
     return campaign_service.list_campaigns(session)
 
 
+@router.post("/backfill-titles")
+def backfill_titles(
+    force: bool = False,
+    session: Session = Depends(get_session),
+) -> dict:
+    """One-off maintenance: give pre-existing campaigns short AI titles.
+
+    Campaigns created before the title feature still hold the long goal text as
+    their name. This regenerates a short title for any over-long name (or all of
+    them with ?force=true). Idempotent — re-running only touches names that are
+    still long."""
+    return campaign_service.backfill_titles(session, force=force)
+
+
 @router.get("/{campaign_id}", response_model=CampaignRead)
 def get_one(
     campaign_id: int, session: Session = Depends(get_session)
