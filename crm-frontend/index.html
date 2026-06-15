@@ -18,15 +18,15 @@
       rel="stylesheet"
     />
     <title>PulseCRM — AI Marketing Assistant</title>
-    <!-- Apply the saved theme (default dark) before paint to avoid a light→dark
+    <!-- Apply the saved theme (default light) before paint to avoid a dark→light
          flash. Mirrors getInitial() in src/lib/theme.ts. -->
     <script>
       (function () {
         try {
           var saved = localStorage.getItem("pulsecrm-theme");
-          if (saved !== "light") document.documentElement.classList.add("dark");
+          if (saved === "dark") document.documentElement.classList.add("dark");
         } catch (e) {
-          document.documentElement.classList.add("dark");
+          /* no saved preference / no storage access: keep the light default */
         }
       })();
     </script>
